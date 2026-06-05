@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Morgan Chase Bank</title>
+  <title>Bank of America</title>
   <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@300;400;600;700&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet">
   <style>
     :root {
@@ -60,63 +60,72 @@
       background: var(--navy);
       display: flex; flex-direction: column;
       align-items: center; justify-content: center;
+      padding: 20px;
       transition: opacity 0.6s ease, transform 0.6s ease;
+      overflow-y: auto;
     }
     #pin-screen.hidden {
       opacity: 0; transform: translateY(-30px); pointer-events: none;
     }
     .pin-logo {
-      text-align: center; margin-bottom: 48px;
+      text-align: center; margin-bottom: 36px;
     }
     .pin-logo .logo-mark {
-      width: 64px; height: 64px; margin: 0 auto 16px;
+      width: 56px; height: 56px; margin: 0 auto 14px;
       display: flex; align-items: center; justify-content: center;
     }
     .pin-logo h1 {
       font-family: 'Cormorant Garamond', serif;
-      font-size: 2.4rem; font-weight: 300;
+      font-size: clamp(1.6rem, 5vw, 2.4rem); font-weight: 300;
       letter-spacing: 0.18em; color: var(--white);
     }
     .pin-logo span { color: var(--gold); }
     .pin-logo p {
-      font-size: 0.72rem; letter-spacing: 0.3em;
+      font-size: clamp(0.6rem, 2vw, 0.72rem); letter-spacing: 0.3em;
       color: var(--white-dim); text-transform: uppercase; margin-top: 4px;
     }
     .pin-card {
       background: var(--navy-mid);
       border: 1px solid var(--border);
       border-radius: 20px;
-      padding: 40px 48px;
-      width: 360px;
+      padding: clamp(24px, 5vw, 40px) clamp(20px, 6vw, 48px);
+      width: min(360px, 92vw);
       box-shadow: var(--shadow);
       text-align: center;
     }
     .pin-card h2 {
       font-family: 'Cormorant Garamond', serif;
-      font-size: 1.5rem; font-weight: 400;
-      margin-bottom: 8px; color: var(--white);
+      font-size: clamp(1.2rem, 4vw, 1.5rem); font-weight: 400;
+      margin-bottom: 6px; color: var(--white);
     }
     .pin-card p {
-      font-size: 0.8rem; color: var(--white-dim);
-      margin-bottom: 32px; letter-spacing: 0.05em;
+      font-size: clamp(0.72rem, 2.5vw, 0.8rem); color: var(--white-dim);
+      margin-bottom: 28px; letter-spacing: 0.05em;
     }
     .pin-dots {
-      display: flex; gap: 16px; justify-content: center;
-      margin-bottom: 32px;
+      display: flex; gap: 20px; justify-content: center;
+      margin-bottom: 28px;
     }
     .pin-dot {
-      width: 14px; height: 14px; border-radius: 50%;
+      width: 16px; height: 16px; border-radius: 50%;
       border: 2px solid var(--gold-dim);
-      transition: all 0.2s ease;
+      background: transparent;
+      transition: all 0.25s ease;
+      position: relative;
     }
     .pin-dot.filled {
-      background: var(--gold); border-color: var(--gold);
-      box-shadow: 0 0 10px rgba(201,168,76,0.5);
+      background: var(--gold);
+      border-color: var(--gold);
+      box-shadow:
+        0 0 8px rgba(201,168,76,0.9),
+        0 0 20px rgba(201,168,76,0.5),
+        0 0 40px rgba(201,168,76,0.2);
+      transform: scale(1.15);
     }
     .pin-dot.shake { animation: shake 0.4s ease; }
     .numpad {
       display: grid; grid-template-columns: repeat(3, 1fr);
-      gap: 12px;
+      gap: clamp(8px, 2vw, 12px);
     }
     .num-btn {
       background: var(--white-faint);
@@ -124,22 +133,24 @@
       border-radius: 12px;
       color: var(--white);
       font-family: 'DM Sans', sans-serif;
-      font-size: 1.2rem; font-weight: 500;
-      padding: 16px;
+      font-size: clamp(1rem, 3.5vw, 1.2rem); font-weight: 500;
+      padding: clamp(13px, 3.5vw, 16px);
       cursor: pointer;
       transition: all 0.15s ease;
       user-select: none;
+      -webkit-tap-highlight-color: transparent;
+      touch-action: manipulation;
     }
     .num-btn:hover { background: rgba(201,168,76,0.12); border-color: var(--gold); }
-    .num-btn:active { transform: scale(0.94); background: rgba(201,168,76,0.2); }
-    .num-btn.clear { font-size: 0.85rem; letter-spacing: 0.05em; color: var(--white-dim); }
+    .num-btn:active { transform: scale(0.92); background: rgba(201,168,76,0.22); border-color: var(--gold); }
+    .num-btn.clear { font-size: clamp(0.72rem, 2.5vw, 0.85rem); letter-spacing: 0.05em; color: var(--white-dim); }
     .pin-error {
       color: var(--red); font-size: 0.78rem;
       margin-top: 16px; min-height: 20px;
       letter-spacing: 0.04em;
     }
     .pin-hint {
-      margin-top: 20px; font-size: 0.72rem;
+      margin-top: 18px; font-size: 0.72rem;
       color: var(--white-dim); letter-spacing: 0.04em;
     }
 
@@ -589,11 +600,7 @@
       .tx-sub { font-size: 0.68rem; }
       .tx-amount { font-size: 1rem; }
 
-      /* PIN screen */
-      .pin-card { width: 92vw; padding: 28px 20px; border-radius: 16px; }
-      .pin-logo h1 { font-size: 1.8rem; }
-      .num-btn { padding: 14px; font-size: 1.05rem; }
-      .pin-dots { gap: 14px; margin-bottom: 24px; }
+      /* PIN screen — handled by clamp() globally */
 
       /* Modal */
       .modal { padding: 28px 20px; border-radius: 16px; }
@@ -623,9 +630,7 @@
       .balance-amount { font-size: 2.1rem; }
       .brand-text h1 { font-size: 0.95rem; }
       .tab-btn { font-size: 0.62rem; padding: 7px 4px; }
-      .num-btn { padding: 12px; font-size: 1rem; }
       .card { padding: 16px 12px; }
-      .pin-card { padding: 24px 16px; }
     }
 
     /* ── MOBILE BOTTOM NAV ── */
@@ -699,7 +704,7 @@
         <rect x="8" y="16" width="48" height="8" rx="2" fill="#C9A84C" opacity="0.4"/>
       </svg>
     </div>
-    <h1>MORGAN CHASE <span>BANK</span></h1>
+    <h1>BANK OF <span>AMERICA</span></h1>
     <p>Private Banking &amp; Wealth</p>
   </div>
   <div class="pin-card">
@@ -740,7 +745,7 @@
         <rect x="4" y="9" width="30" height="5" rx="1.5" fill="#C9A84C" opacity="0.4"/>
       </svg>
       <div class="brand-text">
-        <h1>MORGAN CHASE BANK</h1>
+        <h1>BANK OF AMERICA</h1>
         <p>Private Banking &amp; Wealth</p>
       </div>
     </div>
@@ -939,14 +944,14 @@
   </main>
 
   <footer>
-    <div class="footer-brand">MORGAN CHASE <span>BANK</span></div>
+    <div class="footer-brand">BANK OF <span>AMERICA</span></div>
     <div class="footer-links">
       <a href="#">Privacy</a>
       <a href="#">Security</a>
       <a href="#">Support</a>
       <a href="#">Terms</a>
     </div>
-    <div class="footer-copy">© 2026 Morgan Chase Financial Group. FDIC Insured.</div>
+    <div class="footer-copy">© 2026 Bank of America Financial Group. FDIC Insured.</div>
   </footer>
 </div>
 
