@@ -1008,21 +1008,6 @@
   const ACCOUNT_NO = 'CHK-' + Math.floor(1000 + Math.random() * 9000);
   const ANNUAL_RATE = 0.024;
 
-  // ── INIT ──
-  document.getElementById('header-acct').textContent = ACCOUNT_NO;
-  document.getElementById('acct-no').textContent = ACCOUNT_NO;
-  document.getElementById('summary-acct-no').textContent = ACCOUNT_NO;
-
-  transactions.unshift({ type: 'deposit', amount: 5000000, note: 'Wire Transfer', time: '09:14 AM', date: 'Jun 4' });
-  renderHistory();
-
-  // Interest accrual — ticks every 30s for demo
-  setInterval(() => {
-    const daily = balance * (ANNUAL_RATE / 365);
-    interestAccrued += daily / 2880;
-    document.getElementById('interest-display').textContent = '$' + interestAccrued.toFixed(4);
-  }, 30000);
-
   // ── PIN LOGIC ──
   document.querySelectorAll('.num-btn').forEach(btn => {
     btn.addEventListener('click', () => {
@@ -1267,7 +1252,6 @@
       balance -= val;
       animateBalance(balance, old);
       addTransaction('transfer', val, typeLabels[type] + ' → ' + dest.split(' · ')[0] + (ref ? ' · ' + ref : ''));
-      // Reset form
       document.getElementById('transfer-type').value = '';
       document.getElementById('transfer-input').value = '';
       document.getElementById('transfer-ref').value = '';
@@ -1275,6 +1259,7 @@
       showToast(true, 'Transfer Initiated', '$' + val.toLocaleString('en-US',{minimumFractionDigits:2}) + ' sent to ' + dest.split(' · ')[0] + '.');
     });
   });
+
   // ── MOBILE NAV ──
   function mobileNav(section, btn) {
     document.querySelectorAll('.mobile-nav-btn').forEach(b => b.classList.remove('active'));
@@ -1283,5 +1268,19 @@
     if (el) el.scrollIntoView({ behavior: 'smooth', block: 'start' });
   }
 
-</body>
+  // ── INIT (runs after all functions defined) ──
+  document.getElementById('header-acct').textContent = ACCOUNT_NO;
+  document.getElementById('acct-no').textContent = ACCOUNT_NO;
+  document.getElementById('summary-acct-no').textContent = ACCOUNT_NO;
+  transactions.unshift({ type: 'deposit', amount: 5000000, note: 'Wire Transfer', time: '09:14 AM', date: 'Jun 4' });
+  renderHistory();
+
+  // Interest accrual — ticks every 30s for demo
+  setInterval(() => {
+    const daily = balance * (ANNUAL_RATE / 365);
+    interestAccrued += daily / 2880;
+    document.getElementById('interest-display').textContent = '$' + interestAccrued.toFixed(4);
+  }, 30000);
+
+</script></body>
 </html>
