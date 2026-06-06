@@ -380,6 +380,12 @@
           </div>
         </div>
         <div id="transfer-private" style="display:none">
+          <div class="form-group">
+            <label>Select Saved Beneficiary (optional)</label>
+            <select class="form-input" id="priv-ben-select" onchange="autofillBeneficiary()">
+              <option value="">— Select a saved beneficiary —</option>
+            </select>
+          </div>
           <div class="form-group"><label>Recipient Full Name</label><input type="text" class="form-input" id="priv-name" placeholder="e.g. James Whitfield"></div>
           <div class="form-group"><label>Account Number</label><input type="text" class="form-input" id="priv-acct" placeholder="e.g. 0094882133"></div>
           <div class="form-group"><label>Bank Name</label><input type="text" class="form-input" id="priv-bank" placeholder="e.g. First National Bank"></div>
@@ -723,8 +729,36 @@
       document.getElementById('transfer-ref').value = '';
       handleTransferType();
       showToast(true, 'Transfer Initiated', '$' + val.toLocaleString('en-US',{minimumFractionDigits:2}) + ' sent to ' + dest.split(' · ')[0] + '.');
+      saveData();
     });
   });
+
+  // ── BENEFICIARY DROPDOWN ──
+  function refreshBenDropdown() {
+    const sel = document.getElementById('priv-ben-select');
+    sel.innerHTML = '<option value="">— Select a saved beneficiary —</option>';
+    beneficiaries.forEach(b => {
+      const opt = document.createElement('option');
+      opt.value = b.id;
+      opt.textContent = b.name + ' · ' + b.acct + ' (' + b.bank + ')';
+      sel.appendChild(opt);
+    });
+  }
+
+  function autofillBeneficiary() {
+    const id = parseInt(document.getElementById('priv-ben-select').value);
+    if (!id) {
+      document.getElementById('priv-name').value = '';
+      document.getElementById('priv-acct').value = '';
+      document.getElementById('priv-bank').value = '';
+      return;
+    }
+    const b = beneficiaries.find(b => b.id === id);
+    if (!b) return;
+    document.getElementById('priv-name').value = b.name;
+    document.getElementById('priv-acct').value = b.acct;
+    document.getElementById('priv-bank').value = b.bank;
+  }
 
   // ── BENEFICIARIES ──
   function toggleBenForm() {
@@ -748,14 +782,18 @@
     if (!bank) return showToast(false, 'Missing Bank', 'Please enter the bank name.');
     beneficiaries.unshift({ id: Date.now(), name, acct, bank, rel });
     renderBeneficiaries();
+    refreshBenDropdown();
     toggleBenForm();
     showToast(true, 'Beneficiary Saved', name + ' has been added.');
+    saveData();
   }
 
   function deleteBeneficiary(id) {
     beneficiaries = beneficiaries.filter(b => b.id !== id);
     renderBeneficiaries();
+    refreshBenDropdown();
     showToast(true, 'Removed', 'Beneficiary has been deleted.');
+    saveData();
   }
 
   function renderBeneficiaries() {
@@ -802,6 +840,7 @@
     renderAccounts();
     toggleAddAccountForm();
     showToast(true, 'Account Opened', (nick || type) + ' account ' + newNo + ' is now active.');
+    saveData();
   }
 
   function renderAccounts() {
@@ -830,13 +869,55 @@
     if (el) el.scrollIntoView({ behavior:'smooth', block:'start' });
   }
 
+  // ── STORAGE ──
+  function saveData() {
+    try {
+      localStorage.setItem('bofa_balance', JSON.stringify(balance));
+      localStorage.setItem('bofa_transactions', JSON.stringify(transactions));
+      localStorage.setItem('bofa_beneficiaries', JSON.stringify(beneficiaries));
+      localStorage.setItem('bofa_extraAccounts', JSON.stringify(extraAccounts));
+      localStorage.setItem('bofa_lastDep', document.getElementById('last-dep-display').textContent);
+    } catch(e) {}
+  }
+
+  function loadData() {
+    try {
+      const savedBal = localStorage.getItem('bofa_balance');
+      if (savedBal !== null) balance = JSON.parse(savedBal);
+
+      const savedTx = localStorage.getItem('bofa_transactions');
+      if (savedTx) transactions = JSON.parse(savedTx);
+
+      const savedBen = localStorage.getItem('bofa_beneficiaries');
+      if (savedBen) beneficiaries = JSON.parse(savedBen);
+
+      const savedAccts = localStorage.getItem('bofa_extraAccounts');
+      if (savedAccts) extraAccounts = JSON.parse(savedAccts);
+
+      const savedDep = localStorage.getItem('bofa_lastDep');
+      if (savedDep) document.getElementById('last-dep-display').textContent = savedDep;
+    } catch(e) {}
+  }
+
   // ── INIT ──
+  loadData();
+
+  // If no saved transactions, seed the default deposit
+  if (transactions.length === 0) {
+    transactions.unshift({ type:'deposit', amount:5000000, note:'Wire Transfer', time:'09:14 AM', date:'Jun 4' });
+  }
+
+  // Sync balance display
+  const [initInt, initDec] = balance.toFixed(2).split('.');
+  document.getElementById('balance-int').textContent = parseInt(initInt).toLocaleString();
+  document.getElementById('balance-dec').textContent = '.' + initDec;
+
   document.getElementById('header-acct').textContent = '••••' + ACCT_SUFFIX;
   document.getElementById('acct-no').textContent = ACCOUNT_NO;
-  transactions.unshift({ type:'deposit', amount:5000000, note:'Wire Transfer', time:'09:14 AM', date:'Jun 4' });
   renderHistory();
   renderAccounts();
   renderBeneficiaries();
+  refreshBenDropdown();
 
   // Interest accrual
   setInterval(() => {
