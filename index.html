@@ -2,8 +2,23 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
   <title>Bank of America</title>
+
+  <!-- PWA -->
+  <meta name="application-name" content="Bank of America">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="apple-mobile-web-app-title" content="BofA">
+  <meta name="mobile-web-app-capable" content="yes">
+  <meta name="theme-color" content="#0A1628">
+  <meta name="description" content="Bank of America — Private Banking & Wealth">
+  <link rel="manifest" href="manifest.json">
+
+  <!-- Apple Touch Icon (inline SVG as base64 PNG fallback) -->
+  <link rel="apple-touch-icon" href="icon.png">
+  <link rel="icon" type="image/png" href="icon.png">
+
   <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@300;400;600;700&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet">
   <style>
     :root {
@@ -828,6 +843,13 @@
     interestAccrued += balance * (ANNUAL_RATE / 365) / 2880;
     document.getElementById('interest-display').textContent = '$' + interestAccrued.toFixed(4);
   }, 30000);
+
+  // ── SERVICE WORKER ──
+  if ('serviceWorker' in navigator) {
+    window.addEventListener('load', () => {
+      navigator.serviceWorker.register('./sw.js').catch(() => {});
+    });
+  }
 </script>
 </body>
 </html>
