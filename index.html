@@ -21,670 +21,224 @@
       --border: rgba(201,168,76,0.2);
       --shadow: 0 24px 80px rgba(0,0,0,0.5);
     }
+    * { margin:0; padding:0; box-sizing:border-box; }
+    body { font-family:'DM Sans',sans-serif; background:var(--navy); color:var(--white); min-height:100vh; overflow-x:hidden; }
 
-    * { margin: 0; padding: 0; box-sizing: border-box; }
+    /* BG */
+    .bg-grid { position:fixed; inset:0; z-index:0; background-image:linear-gradient(rgba(201,168,76,0.04) 1px,transparent 1px),linear-gradient(90deg,rgba(201,168,76,0.04) 1px,transparent 1px); background-size:48px 48px; pointer-events:none; }
+    .bg-glow { position:fixed; top:-200px; right:-200px; width:600px; height:600px; border-radius:50%; background:radial-gradient(circle,rgba(201,168,76,0.08) 0%,transparent 70%); pointer-events:none; z-index:0; }
+    .bg-glow2 { position:fixed; bottom:-200px; left:-200px; width:500px; height:500px; border-radius:50%; background:radial-gradient(circle,rgba(14,40,80,0.6) 0%,transparent 70%); pointer-events:none; z-index:0; }
 
-    body {
-      font-family: 'DM Sans', sans-serif;
-      background: var(--navy);
-      color: var(--white);
-      min-height: 100vh;
-      overflow-x: hidden;
-    }
+    /* LOADING */
+    .loading-bar { position:fixed; top:0; left:0; height:2px; background:linear-gradient(90deg,var(--gold),var(--gold-light)); z-index:999; width:0; transition:width 0.4s ease; }
+    .loading-bar.done { width:100%; opacity:0; transition:width 0.3s, opacity 0.4s 0.3s; }
 
-    /* ── BACKGROUND ── */
-    .bg-grid {
-      position: fixed; inset: 0; z-index: 0;
-      background-image:
-        linear-gradient(rgba(201,168,76,0.04) 1px, transparent 1px),
-        linear-gradient(90deg, rgba(201,168,76,0.04) 1px, transparent 1px);
-      background-size: 48px 48px;
-      pointer-events: none;
-    }
-    .bg-glow {
-      position: fixed; top: -200px; right: -200px;
-      width: 600px; height: 600px; border-radius: 50%;
-      background: radial-gradient(circle, rgba(201,168,76,0.08) 0%, transparent 70%);
-      pointer-events: none; z-index: 0;
-    }
-    .bg-glow2 {
-      position: fixed; bottom: -200px; left: -200px;
-      width: 500px; height: 500px; border-radius: 50%;
-      background: radial-gradient(circle, rgba(14,40,80,0.6) 0%, transparent 70%);
-      pointer-events: none; z-index: 0;
-    }
+    /* PIN SCREEN */
+    #pin-screen { position:fixed; inset:0; z-index:100; background:var(--navy); display:flex; flex-direction:column; align-items:center; justify-content:center; padding:20px; transition:opacity 0.6s ease, transform 0.6s ease; overflow-y:auto; }
+    #pin-screen.hidden { opacity:0; transform:translateY(-30px); pointer-events:none; }
+    .pin-logo { text-align:center; margin-bottom:36px; }
+    .pin-logo .logo-mark { width:56px; height:56px; margin:0 auto 14px; display:flex; align-items:center; justify-content:center; }
+    .pin-logo h1 { font-family:'Cormorant Garamond',serif; font-size:clamp(1.6rem,5vw,2.4rem); font-weight:300; letter-spacing:0.18em; color:var(--white); }
+    .pin-logo span { color:var(--gold); }
+    .pin-logo p { font-size:clamp(0.6rem,2vw,0.72rem); letter-spacing:0.3em; color:var(--white-dim); text-transform:uppercase; margin-top:4px; }
+    .pin-card { background:var(--navy-mid); border:1px solid var(--border); border-radius:20px; padding:clamp(24px,5vw,40px) clamp(20px,6vw,48px); width:min(360px,92vw); box-shadow:var(--shadow); text-align:center; }
+    .pin-card h2 { font-family:'Cormorant Garamond',serif; font-size:clamp(1.2rem,4vw,1.5rem); font-weight:400; margin-bottom:6px; color:var(--white); }
+    .pin-card p { font-size:clamp(0.72rem,2.5vw,0.8rem); color:var(--white-dim); margin-bottom:28px; letter-spacing:0.05em; }
+    .pin-dots { display:flex; gap:20px; justify-content:center; margin-bottom:28px; }
+    .pin-dot { width:16px; height:16px; border-radius:50%; border:2px solid var(--gold-dim); background:transparent; transition:all 0.25s ease; }
+    .pin-dot.filled { background:var(--gold); border-color:var(--gold); box-shadow:0 0 8px rgba(201,168,76,0.9),0 0 20px rgba(201,168,76,0.5),0 0 40px rgba(201,168,76,0.2); transform:scale(1.15); }
+    .pin-dot.shake { animation:shake 0.4s ease; }
+    @keyframes shake { 0%,100%{transform:translateX(0)} 20%{transform:translateX(-6px)} 40%{transform:translateX(6px)} 60%{transform:translateX(-4px)} 80%{transform:translateX(4px)} }
+    .numpad { display:grid; grid-template-columns:repeat(3,1fr); gap:clamp(8px,2vw,12px); }
+    .num-btn { background:var(--white-faint); border:1px solid var(--border); border-radius:12px; color:var(--white); font-family:'DM Sans',sans-serif; font-size:clamp(1rem,3.5vw,1.2rem); font-weight:500; padding:clamp(13px,3.5vw,16px); cursor:pointer; transition:all 0.15s ease; user-select:none; -webkit-tap-highlight-color:transparent; touch-action:manipulation; }
+    .num-btn:hover { background:rgba(201,168,76,0.12); border-color:var(--gold); }
+    .num-btn:active { transform:scale(0.92); background:rgba(201,168,76,0.22); border-color:var(--gold); }
+    .num-btn.clear { font-size:clamp(0.72rem,2.5vw,0.85rem); letter-spacing:0.05em; color:var(--white-dim); }
+    .pin-error { color:var(--red); font-size:0.78rem; margin-top:16px; min-height:20px; letter-spacing:0.04em; }
+    .pin-hint { margin-top:18px; font-size:0.72rem; color:var(--white-dim); letter-spacing:0.04em; }
 
-    /* ── PIN SCREEN ── */
-    #pin-screen {
-      position: fixed; inset: 0; z-index: 100;
-      background: var(--navy);
-      display: flex; flex-direction: column;
-      align-items: center; justify-content: center;
-      padding: 20px;
-      transition: opacity 0.6s ease, transform 0.6s ease;
-      overflow-y: auto;
-    }
-    #pin-screen.hidden {
-      opacity: 0; transform: translateY(-30px); pointer-events: none;
-    }
-    .pin-logo {
-      text-align: center; margin-bottom: 36px;
-    }
-    .pin-logo .logo-mark {
-      width: 56px; height: 56px; margin: 0 auto 14px;
-      display: flex; align-items: center; justify-content: center;
-    }
-    .pin-logo h1 {
-      font-family: 'Cormorant Garamond', serif;
-      font-size: clamp(1.6rem, 5vw, 2.4rem); font-weight: 300;
-      letter-spacing: 0.18em; color: var(--white);
-    }
-    .pin-logo span { color: var(--gold); }
-    .pin-logo p {
-      font-size: clamp(0.6rem, 2vw, 0.72rem); letter-spacing: 0.3em;
-      color: var(--white-dim); text-transform: uppercase; margin-top: 4px;
-    }
-    .pin-card {
-      background: var(--navy-mid);
-      border: 1px solid var(--border);
-      border-radius: 20px;
-      padding: clamp(24px, 5vw, 40px) clamp(20px, 6vw, 48px);
-      width: min(360px, 92vw);
-      box-shadow: var(--shadow);
-      text-align: center;
-    }
-    .pin-card h2 {
-      font-family: 'Cormorant Garamond', serif;
-      font-size: clamp(1.2rem, 4vw, 1.5rem); font-weight: 400;
-      margin-bottom: 6px; color: var(--white);
-    }
-    .pin-card p {
-      font-size: clamp(0.72rem, 2.5vw, 0.8rem); color: var(--white-dim);
-      margin-bottom: 28px; letter-spacing: 0.05em;
-    }
-    .pin-dots {
-      display: flex; gap: 20px; justify-content: center;
-      margin-bottom: 28px;
-    }
-    .pin-dot {
-      width: 16px; height: 16px; border-radius: 50%;
-      border: 2px solid var(--gold-dim);
-      background: transparent;
-      transition: all 0.25s ease;
-      position: relative;
-    }
-    .pin-dot.filled {
-      background: var(--gold);
-      border-color: var(--gold);
-      box-shadow:
-        0 0 8px rgba(201,168,76,0.9),
-        0 0 20px rgba(201,168,76,0.5),
-        0 0 40px rgba(201,168,76,0.2);
-      transform: scale(1.15);
-    }
-    .pin-dot.shake { animation: shake 0.4s ease; }
-    .numpad {
-      display: grid; grid-template-columns: repeat(3, 1fr);
-      gap: clamp(8px, 2vw, 12px);
-    }
-    .num-btn {
-      background: var(--white-faint);
-      border: 1px solid var(--border);
-      border-radius: 12px;
-      color: var(--white);
-      font-family: 'DM Sans', sans-serif;
-      font-size: clamp(1rem, 3.5vw, 1.2rem); font-weight: 500;
-      padding: clamp(13px, 3.5vw, 16px);
-      cursor: pointer;
-      transition: all 0.15s ease;
-      user-select: none;
-      -webkit-tap-highlight-color: transparent;
-      touch-action: manipulation;
-    }
-    .num-btn:hover { background: rgba(201,168,76,0.12); border-color: var(--gold); }
-    .num-btn:active { transform: scale(0.92); background: rgba(201,168,76,0.22); border-color: var(--gold); }
-    .num-btn.clear { font-size: clamp(0.72rem, 2.5vw, 0.85rem); letter-spacing: 0.05em; color: var(--white-dim); }
-    .pin-error {
-      color: var(--red); font-size: 0.78rem;
-      margin-top: 16px; min-height: 20px;
-      letter-spacing: 0.04em;
-    }
-    .pin-hint {
-      margin-top: 18px; font-size: 0.72rem;
-      color: var(--white-dim); letter-spacing: 0.04em;
-    }
+    /* APP */
+    #app { position:relative; z-index:1; min-height:100vh; opacity:0; transform:translateY(20px); transition:opacity 0.6s ease 0.2s, transform 0.6s ease 0.2s; }
+    #app.visible { opacity:1; transform:translateY(0); }
 
-    @keyframes shake {
-      0%,100% { transform: translateX(0); }
-      20% { transform: translateX(-6px); }
-      40% { transform: translateX(6px); }
-      60% { transform: translateX(-4px); }
-      80% { transform: translateX(4px); }
-    }
+    /* HEADER */
+    header { display:flex; align-items:center; justify-content:space-between; padding:20px 40px; border-bottom:1px solid var(--border); background:rgba(10,22,40,0.8); backdrop-filter:blur(12px); position:sticky; top:0; z-index:10; }
+    .header-brand { display:flex; align-items:center; gap:14px; }
+    .logo-svg { width:38px; height:38px; }
+    .brand-text h1 { font-family:'Cormorant Garamond',serif; font-size:1.5rem; font-weight:400; letter-spacing:0.12em; color:var(--white); }
+    .brand-text p { font-size:0.62rem; letter-spacing:0.28em; color:var(--gold); text-transform:uppercase; margin-top:1px; }
+    .header-right { display:flex; align-items:center; gap:20px; }
+    .account-chip { background:var(--white-faint); border:1px solid var(--border); border-radius:100px; padding:6px 16px; font-size:0.75rem; letter-spacing:0.06em; color:var(--white-dim); }
+    .account-chip span { color:var(--gold); font-weight:500; }
+    .logout-btn { background:none; border:1px solid var(--border); border-radius:8px; padding:7px 16px; color:var(--white-dim); font-size:0.75rem; cursor:pointer; font-family:'DM Sans',sans-serif; letter-spacing:0.06em; transition:all 0.2s; }
+    .logout-btn:hover { border-color:var(--gold); color:var(--gold); }
 
-    /* ── MAIN APP ── */
-    #app {
-      position: relative; z-index: 1;
-      min-height: 100vh;
-      opacity: 0; transform: translateY(20px);
-      transition: opacity 0.6s ease 0.2s, transform 0.6s ease 0.2s;
-    }
-    #app.visible { opacity: 1; transform: translateY(0); }
+    /* LAYOUT */
+    main { max-width:1100px; margin:0 auto; padding:40px 24px 60px; display:grid; grid-template-columns:1fr 1fr; gap:24px; }
 
-    /* ── HEADER ── */
-    header {
-      display: flex; align-items: center; justify-content: space-between;
-      padding: 20px 40px;
-      border-bottom: 1px solid var(--border);
-      background: rgba(10,22,40,0.8);
-      backdrop-filter: blur(12px);
-      position: sticky; top: 0; z-index: 10;
-    }
-    .header-brand {
-      display: flex; align-items: center; gap: 14px;
-    }
-    .logo-svg { width: 38px; height: 38px; }
-    .brand-text h1 {
-      font-family: 'Cormorant Garamond', serif;
-      font-size: 1.5rem; font-weight: 400;
-      letter-spacing: 0.12em; color: var(--white);
-    }
-    .brand-text p {
-      font-size: 0.62rem; letter-spacing: 0.28em;
-      color: var(--gold); text-transform: uppercase; margin-top: 1px;
-    }
-    .header-right {
-      display: flex; align-items: center; gap: 20px;
-    }
-    .account-chip {
-      background: var(--white-faint);
-      border: 1px solid var(--border);
-      border-radius: 100px;
-      padding: 6px 16px;
-      font-size: 0.75rem; letter-spacing: 0.06em;
-      color: var(--white-dim);
-    }
-    .account-chip span { color: var(--gold); font-weight: 500; }
-    .logout-btn {
-      background: none; border: 1px solid var(--border);
-      border-radius: 8px; padding: 7px 16px;
-      color: var(--white-dim); font-size: 0.75rem;
-      cursor: pointer; font-family: 'DM Sans', sans-serif;
-      letter-spacing: 0.06em; transition: all 0.2s;
-    }
-    .logout-btn:hover { border-color: var(--gold); color: var(--gold); }
+    /* CARDS */
+    .card { background:var(--navy-mid); border:1px solid var(--border); border-radius:20px; padding:32px; position:relative; overflow:hidden; }
+    .card::before { content:''; position:absolute; top:0; left:0; right:0; height:1px; background:linear-gradient(90deg,transparent,var(--gold),transparent); opacity:0.4; }
+    .card-label { font-size:0.68rem; letter-spacing:0.28em; text-transform:uppercase; color:var(--gold); margin-bottom:12px; }
 
-    /* ── MAIN LAYOUT ── */
-    main {
-      max-width: 1100px; margin: 0 auto;
-      padding: 40px 24px 60px;
-      display: grid;
-      grid-template-columns: 1fr 1fr;
-      grid-template-rows: auto auto auto;
-      gap: 24px;
-    }
+    /* BALANCE CARD */
+    .balance-card { grid-column:1/-1; background:linear-gradient(135deg,var(--navy-light) 0%,var(--navy-mid) 100%); display:flex; align-items:center; justify-content:space-between; flex-wrap:wrap; gap:24px; }
+    .balance-left { flex:1; min-width:220px; }
+    .balance-amount { font-family:'Cormorant Garamond',serif; font-size:3.8rem; font-weight:300; color:var(--white); line-height:1; display:flex; align-items:baseline; gap:6px; }
+    .balance-currency { font-size:1.8rem; color:var(--gold); }
+    .balance-cents { font-size:2rem; color:var(--white-dim); }
+    .balance-meta { display:flex; gap:32px; margin-top:24px; flex-wrap:wrap; }
+    .meta-label { font-size:0.65rem; letter-spacing:0.2em; text-transform:uppercase; color:var(--white-dim); }
+    .meta-val { font-size:0.95rem; font-weight:500; margin-top:3px; }
+    .meta-val.positive { color:var(--green); }
+    .meta-val.negative { color:var(--red); }
+    .balance-right { text-align:right; }
+    .interest-badge { background:rgba(46,204,138,0.1); border:1px solid rgba(46,204,138,0.3); border-radius:100px; padding:6px 16px; display:inline-flex; align-items:center; gap:8px; font-size:0.78rem; color:var(--green); }
+    .interest-badge .dot { width:6px; height:6px; border-radius:50%; background:var(--green); animation:pulse-dot 2s infinite; }
+    @keyframes pulse-dot { 0%,100%{opacity:1} 50%{opacity:0.3} }
+    .interest-earned { margin-top:12px; font-size:0.78rem; color:var(--white-dim); }
+    .interest-earned span { color:var(--green); font-weight:500; }
 
-    /* ── CARDS ── */
-    .card {
-      background: var(--navy-mid);
-      border: 1px solid var(--border);
-      border-radius: 20px;
-      padding: 32px;
-      position: relative; overflow: hidden;
-    }
-    .card::before {
-      content: '';
-      position: absolute; top: 0; left: 0; right: 0;
-      height: 1px;
-      background: linear-gradient(90deg, transparent, var(--gold), transparent);
-      opacity: 0.4;
-    }
-    .card-label {
-      font-size: 0.68rem; letter-spacing: 0.28em;
-      text-transform: uppercase; color: var(--gold);
-      margin-bottom: 12px;
-    }
+    /* TRANSACTION CARD */
+    .tab-row { display:flex; gap:4px; margin-bottom:24px; background:rgba(0,0,0,0.2); border-radius:10px; padding:4px; }
+    .tab-btn { flex:1; padding:9px 12px; background:none; border:none; border-radius:7px; cursor:pointer; font-family:'DM Sans',sans-serif; font-size:0.78rem; font-weight:500; letter-spacing:0.06em; text-transform:uppercase; color:var(--white-dim); transition:all 0.2s; }
+    .tab-btn.active { background:var(--navy-light); color:var(--gold); border:1px solid var(--border); }
+    .tx-form { display:none; }
+    .tx-form.active { display:block; }
+    .form-group { margin-bottom:16px; }
+    .form-group label { display:block; font-size:0.7rem; letter-spacing:0.18em; text-transform:uppercase; color:var(--white-dim); margin-bottom:8px; }
+    .form-input { width:100%; background:rgba(0,0,0,0.25); border:1px solid var(--border); border-radius:10px; padding:14px 16px; color:var(--white); font-family:'DM Sans',sans-serif; font-size:1rem; font-weight:500; transition:border-color 0.2s; outline:none; }
+    .form-input:focus { border-color:var(--gold); }
+    .form-input::placeholder { color:rgba(245,242,236,0.2); }
+    .form-input::-webkit-inner-spin-button { -webkit-appearance:none; }
+    select.form-input { cursor:pointer; }
+    select.form-input option { background:var(--navy-mid); color:var(--white); }
+    .action-btn { width:100%; background:linear-gradient(135deg,var(--gold) 0%,var(--gold-dim) 100%); border:none; border-radius:10px; padding:15px; color:var(--navy); font-family:'DM Sans',sans-serif; font-size:0.85rem; font-weight:600; letter-spacing:0.12em; text-transform:uppercase; cursor:pointer; transition:all 0.2s; margin-top:4px; }
+    .action-btn:hover { transform:translateY(-1px); box-shadow:0 8px 24px rgba(201,168,76,0.3); }
+    .action-btn:active { transform:translateY(0); }
 
-    /* ── BALANCE CARD ── */
-    .balance-card {
-      grid-column: 1 / -1;
-      background: linear-gradient(135deg, var(--navy-light) 0%, var(--navy-mid) 100%);
-      display: flex; align-items: center; justify-content: space-between;
-      flex-wrap: wrap; gap: 24px;
-    }
-    .balance-left { flex: 1; min-width: 220px; }
-    .balance-amount {
-      font-family: 'Cormorant Garamond', serif;
-      font-size: 3.8rem; font-weight: 300;
-      color: var(--white); line-height: 1;
-      display: flex; align-items: baseline; gap: 6px;
-    }
-    .balance-currency {
-      font-size: 1.8rem; color: var(--gold);
-    }
-    .balance-cents {
-      font-size: 2rem; color: var(--white-dim);
-    }
-    .balance-meta {
-      display: flex; gap: 32px; margin-top: 24px;
-      flex-wrap: wrap;
-    }
-    .balance-meta-item { }
-    .balance-meta-item .meta-label {
-      font-size: 0.65rem; letter-spacing: 0.2em;
-      text-transform: uppercase; color: var(--white-dim);
-    }
-    .balance-meta-item .meta-val {
-      font-size: 0.95rem; font-weight: 500;
-      margin-top: 3px;
-    }
-    .meta-val.positive { color: var(--green); }
-    .meta-val.negative { color: var(--red); }
-    .balance-right {
-      text-align: right;
-    }
-    .interest-badge {
-      background: rgba(46,204,138,0.1);
-      border: 1px solid rgba(46,204,138,0.3);
-      border-radius: 100px;
-      padding: 6px 16px;
-      display: inline-flex; align-items: center; gap: 8px;
-      font-size: 0.78rem; color: var(--green);
-    }
-    .interest-badge .dot {
-      width: 6px; height: 6px; border-radius: 50%;
-      background: var(--green);
-      animation: pulse-dot 2s infinite;
-    }
-    @keyframes pulse-dot {
-      0%,100% { opacity: 1; }
-      50% { opacity: 0.3; }
-    }
-    .interest-earned {
-      margin-top: 12px;
-      font-size: 0.78rem; color: var(--white-dim);
-    }
-    .interest-earned span { color: var(--green); font-weight: 500; }
+    /* HISTORY */
+    .history-card { grid-column:1/-1; }
+    .history-header { display:flex; align-items:center; justify-content:space-between; margin-bottom:20px; }
+    .history-count { background:var(--white-faint); border:1px solid var(--border); border-radius:100px; padding:3px 12px; font-size:0.72rem; color:var(--white-dim); }
+    .tx-list { display:flex; flex-direction:column; gap:10px; }
+    .tx-item { display:flex; align-items:center; gap:16px; padding:14px 16px; background:rgba(0,0,0,0.2); border:1px solid rgba(201,168,76,0.08); border-radius:12px; animation:slide-in 0.35s ease; transition:border-color 0.2s; }
+    .tx-item:hover { border-color:var(--border); }
+    @keyframes slide-in { from{opacity:0;transform:translateX(-12px)} to{opacity:1;transform:translateX(0)} }
+    .tx-icon { width:40px; height:40px; border-radius:10px; display:flex; align-items:center; justify-content:center; font-size:1.1rem; flex-shrink:0; }
+    .tx-icon.transfer { background:rgba(201,168,76,0.12); }
+    .tx-icon.deposit { background:rgba(46,204,138,0.12); }
+    .tx-info { flex:1; }
+    .tx-title { font-size:0.88rem; font-weight:500; color:var(--white); }
+    .tx-sub { font-size:0.72rem; color:var(--white-dim); margin-top:2px; letter-spacing:0.03em; }
+    .tx-amount { font-family:'Cormorant Garamond',serif; font-size:1.2rem; font-weight:600; text-align:right; }
+    .tx-amount.transfer { color:var(--gold); }
+    .tx-amount.deposit { color:var(--green); }
+    .tx-time { font-size:0.68rem; color:var(--white-dim); margin-top:2px; text-align:right; }
+    .no-tx { text-align:center; padding:40px; color:var(--white-dim); font-size:0.85rem; letter-spacing:0.06em; }
 
-    /* ── TRANSACTION FORM ── */
-    .transaction-card { }
-    .tab-row {
-      display: flex; gap: 4px; margin-bottom: 24px;
-      background: rgba(0,0,0,0.2);
-      border-radius: 10px; padding: 4px;
-    }
-    .tab-btn {
-      flex: 1; padding: 9px 12px;
-      background: none; border: none;
-      border-radius: 7px; cursor: pointer;
-      font-family: 'DM Sans', sans-serif;
-      font-size: 0.78rem; font-weight: 500;
-      letter-spacing: 0.06em; text-transform: uppercase;
-      color: var(--white-dim);
-      transition: all 0.2s;
-    }
-    .tab-btn.active {
-      background: var(--navy-light);
-      color: var(--gold);
-      border: 1px solid var(--border);
-    }
-    .tx-form { display: none; }
-    .tx-form.active { display: block; }
-    .form-group { margin-bottom: 16px; }
-    .form-group label {
-      display: block;
-      font-size: 0.7rem; letter-spacing: 0.18em;
-      text-transform: uppercase; color: var(--white-dim);
-      margin-bottom: 8px;
-    }
-    .form-input {
-      width: 100%;
-      background: rgba(0,0,0,0.25);
-      border: 1px solid var(--border);
-      border-radius: 10px;
-      padding: 14px 16px;
-      color: var(--white);
-      font-family: 'DM Sans', sans-serif;
-      font-size: 1.1rem; font-weight: 500;
-      transition: border-color 0.2s;
-      outline: none;
-    }
-    .form-input:focus { border-color: var(--gold); }
-    .form-input::placeholder { color: rgba(245,242,236,0.2); }
-    .form-input::-webkit-inner-spin-button { -webkit-appearance: none; }
-    select.form-input { cursor: pointer; }
-    .action-btn {
-      width: 100%;
-      background: linear-gradient(135deg, var(--gold) 0%, var(--gold-dim) 100%);
-      border: none; border-radius: 10px;
-      padding: 15px; color: var(--navy);
-      font-family: 'DM Sans', sans-serif;
-      font-size: 0.85rem; font-weight: 600;
-      letter-spacing: 0.12em; text-transform: uppercase;
-      cursor: pointer; transition: all 0.2s;
-      margin-top: 4px;
-    }
-    .action-btn:hover {
-      transform: translateY(-1px);
-      box-shadow: 0 8px 24px rgba(201,168,76,0.3);
-    }
-    .action-btn:active { transform: translateY(0); }
+    /* MODAL */
+    .modal-overlay { position:fixed; inset:0; z-index:50; background:rgba(10,22,40,0.85); backdrop-filter:blur(8px); display:flex; align-items:center; justify-content:center; opacity:0; pointer-events:none; transition:opacity 0.25s; }
+    .modal-overlay.show { opacity:1; pointer-events:all; }
+    .modal { background:var(--navy-mid); border:1px solid var(--border); border-radius:20px; padding:40px; width:380px; max-width:90vw; text-align:center; transform:translateY(20px) scale(0.97); transition:transform 0.25s; box-shadow:var(--shadow); }
+    .modal-overlay.show .modal { transform:translateY(0) scale(1); }
+    .modal-icon { width:56px; height:56px; border-radius:50%; background:rgba(201,168,76,0.12); border:1px solid var(--border); display:flex; align-items:center; justify-content:center; font-size:1.5rem; margin:0 auto 20px; }
+    .modal h3 { font-family:'Cormorant Garamond',serif; font-size:1.5rem; font-weight:400; margin-bottom:8px; }
+    .modal p { font-size:0.82rem; color:var(--white-dim); margin-bottom:8px; line-height:1.6; }
+    .modal-amount { font-family:'Cormorant Garamond',serif; font-size:2.2rem; font-weight:300; color:var(--gold); margin:16px 0; }
+    .modal-btns { display:flex; gap:12px; margin-top:24px; }
+    .modal-btn-cancel { flex:1; padding:13px; background:none; border:1px solid var(--border); border-radius:10px; color:var(--white-dim); font-family:'DM Sans',sans-serif; font-size:0.82rem; cursor:pointer; transition:all 0.2s; }
+    .modal-btn-cancel:hover { border-color:var(--red); color:var(--red); }
+    .modal-btn-confirm { flex:1; padding:13px; background:linear-gradient(135deg,var(--gold),var(--gold-dim)); border:none; border-radius:10px; color:var(--navy); font-family:'DM Sans',sans-serif; font-size:0.82rem; font-weight:600; cursor:pointer; transition:all 0.2s; }
 
-    /* ── HISTORY CARD ── */
-    .history-card { grid-column: 1 / -1; }
-    .history-header {
-      display: flex; align-items: center; justify-content: space-between;
-      margin-bottom: 20px;
-    }
-    .history-count {
-      background: var(--white-faint);
-      border: 1px solid var(--border);
-      border-radius: 100px;
-      padding: 3px 12px;
-      font-size: 0.72rem; color: var(--white-dim);
-    }
-    .tx-list { display: flex; flex-direction: column; gap: 10px; }
-    .tx-item {
-      display: flex; align-items: center;
-      gap: 16px; padding: 14px 16px;
-      background: rgba(0,0,0,0.2);
-      border: 1px solid rgba(201,168,76,0.08);
-      border-radius: 12px;
-      animation: slide-in 0.35s ease;
-      transition: border-color 0.2s;
-    }
-    .tx-item:hover { border-color: var(--border); }
-    @keyframes slide-in {
-      from { opacity: 0; transform: translateX(-12px); }
-      to { opacity: 1; transform: translateX(0); }
-    }
-    .tx-icon {
-      width: 40px; height: 40px; border-radius: 10px;
-      display: flex; align-items: center; justify-content: center;
-      font-size: 1.1rem; flex-shrink: 0;
-    }
-    .tx-icon.deposit { background: rgba(46,204,138,0.12); }
-    .tx-icon.withdraw { background: rgba(224,85,85,0.12); }
-    .tx-icon.transfer { background: rgba(201,168,76,0.12); }
-    .tx-info { flex: 1; }
-    .tx-title {
-      font-size: 0.88rem; font-weight: 500; color: var(--white);
-    }
-    .tx-sub {
-      font-size: 0.72rem; color: var(--white-dim);
-      margin-top: 2px; letter-spacing: 0.03em;
-    }
-    .tx-amount {
-      font-family: 'Cormorant Garamond', serif;
-      font-size: 1.2rem; font-weight: 600; text-align: right;
-    }
-    .tx-amount.deposit { color: var(--green); }
-    .tx-amount.withdraw { color: var(--red); }
-    .tx-amount.transfer { color: var(--gold); }
-    .tx-time {
-      font-size: 0.68rem; color: var(--white-dim);
-      margin-top: 2px; text-align: right;
-    }
-    .no-tx {
-      text-align: center; padding: 40px;
-      color: var(--white-dim); font-size: 0.85rem;
-      letter-spacing: 0.06em;
-    }
+    /* TOAST */
+    .toast { position:fixed; bottom:32px; right:32px; z-index:200; background:var(--navy-mid); border:1px solid var(--border); border-radius:14px; padding:16px 22px; display:flex; align-items:center; gap:12px; box-shadow:var(--shadow); transform:translateY(80px) scale(0.95); opacity:0; transition:all 0.35s cubic-bezier(0.34,1.56,0.64,1); max-width:320px; }
+    .toast.show { transform:translateY(0) scale(1); opacity:1; }
+    .toast-icon { width:32px; height:32px; border-radius:8px; display:flex; align-items:center; justify-content:center; font-size:0.9rem; flex-shrink:0; }
+    .toast-icon.success { background:rgba(46,204,138,0.15); }
+    .toast-icon.error { background:rgba(224,85,85,0.15); }
+    .toast-title { font-size:0.85rem; font-weight:500; }
+    .toast-sub { font-size:0.73rem; color:var(--white-dim); margin-top:2px; }
 
-    /* ── CONFIRMATION MODAL ── */
-    .modal-overlay {
-      position: fixed; inset: 0; z-index: 50;
-      background: rgba(10,22,40,0.85);
-      backdrop-filter: blur(8px);
-      display: flex; align-items: center; justify-content: center;
-      opacity: 0; pointer-events: none;
-      transition: opacity 0.25s;
-    }
-    .modal-overlay.show { opacity: 1; pointer-events: all; }
-    .modal {
-      background: var(--navy-mid);
-      border: 1px solid var(--border);
-      border-radius: 20px;
-      padding: 40px;
-      width: 380px; max-width: 90vw;
-      text-align: center;
-      transform: translateY(20px) scale(0.97);
-      transition: transform 0.25s;
-      box-shadow: var(--shadow);
-    }
-    .modal-overlay.show .modal { transform: translateY(0) scale(1); }
-    .modal-icon {
-      width: 56px; height: 56px; border-radius: 50%;
-      background: rgba(201,168,76,0.12);
-      border: 1px solid var(--border);
-      display: flex; align-items: center; justify-content: center;
-      font-size: 1.5rem; margin: 0 auto 20px;
-    }
-    .modal h3 {
-      font-family: 'Cormorant Garamond', serif;
-      font-size: 1.5rem; font-weight: 400;
-      margin-bottom: 8px;
-    }
-    .modal p {
-      font-size: 0.82rem; color: var(--white-dim);
-      margin-bottom: 8px; line-height: 1.6;
-    }
-    .modal-amount {
-      font-family: 'Cormorant Garamond', serif;
-      font-size: 2.2rem; font-weight: 300;
-      color: var(--gold); margin: 16px 0;
-    }
-    .modal-btns {
-      display: flex; gap: 12px; margin-top: 24px;
-    }
-    .modal-btn-cancel {
-      flex: 1; padding: 13px;
-      background: none; border: 1px solid var(--border);
-      border-radius: 10px; color: var(--white-dim);
-      font-family: 'DM Sans', sans-serif; font-size: 0.82rem;
-      cursor: pointer; transition: all 0.2s;
-    }
-    .modal-btn-cancel:hover { border-color: var(--red); color: var(--red); }
-    .modal-btn-confirm {
-      flex: 1; padding: 13px;
-      background: linear-gradient(135deg, var(--gold), var(--gold-dim));
-      border: none; border-radius: 10px;
-      color: var(--navy); font-family: 'DM Sans', sans-serif;
-      font-size: 0.82rem; font-weight: 600;
-      cursor: pointer; transition: all 0.2s;
-    }
-    .modal-btn-confirm:hover { opacity: 0.9; }
+    /* FOOTER */
+    footer { border-top:1px solid var(--border); padding:24px 40px; display:flex; align-items:center; justify-content:space-between; flex-wrap:wrap; gap:16px; position:relative; z-index:1; }
+    .footer-brand { font-family:'Cormorant Garamond',serif; font-size:1rem; font-weight:300; letter-spacing:0.14em; color:var(--white-dim); }
+    .footer-brand span { color:var(--gold); }
+    .footer-links { display:flex; gap:24px; }
+    .footer-links a { font-size:0.72rem; letter-spacing:0.12em; text-transform:uppercase; color:var(--white-dim); text-decoration:none; transition:color 0.2s; }
+    .footer-links a:hover { color:var(--gold); }
+    .footer-copy { font-size:0.68rem; color:rgba(245,242,236,0.3); letter-spacing:0.06em; }
 
-    /* ── TOAST ── */
-    .toast {
-      position: fixed; bottom: 32px; right: 32px; z-index: 200;
-      background: var(--navy-mid);
-      border: 1px solid var(--border);
-      border-radius: 14px;
-      padding: 16px 22px;
-      display: flex; align-items: center; gap: 12px;
-      box-shadow: var(--shadow);
-      transform: translateY(80px) scale(0.95);
-      opacity: 0;
-      transition: all 0.35s cubic-bezier(0.34, 1.56, 0.64, 1);
-      max-width: 320px;
+    /* MOBILE NAV */
+    .mobile-nav { display:none; position:fixed; bottom:0; left:0; right:0; background:var(--navy-mid); border-top:1px solid var(--border); padding:10px 0 20px; z-index:20; backdrop-filter:blur(12px); }
+    .mobile-nav-inner { display:flex; justify-content:space-around; align-items:center; }
+    .mobile-nav-btn { display:flex; flex-direction:column; align-items:center; gap:4px; background:none; border:none; color:var(--white-dim); cursor:pointer; font-family:'DM Sans',sans-serif; font-size:0.6rem; letter-spacing:0.08em; text-transform:uppercase; padding:6px 16px; border-radius:10px; transition:all 0.2s; }
+    .mobile-nav-btn .nav-icon { font-size:1.2rem; }
+    .mobile-nav-btn.active { color:var(--gold); }
+
+    /* RESPONSIVE */
+    @media (max-width:900px) { main { padding:24px 20px 80px; gap:16px; } .balance-amount { font-size:3rem; } }
+    @media (max-width:768px) {
+      header { padding:14px 16px; }
+      .brand-text h1 { font-size:1.1rem; letter-spacing:0.08em; }
+      .brand-text p { font-size:0.55rem; }
+      .logo-svg { width:28px; height:28px; }
+      .account-chip { font-size:0.68rem; padding:5px 10px; }
+      .logout-btn { font-size:0.68rem; padding:6px 10px; }
+      main { grid-template-columns:1fr; padding:16px 12px 100px; gap:12px; }
+      .balance-card { grid-column:1; flex-direction:column; gap:20px; }
+      .history-card { grid-column:1; }
+      .balance-amount { font-size:2.6rem; }
+      .balance-meta { gap:16px; flex-wrap:wrap; }
+      .balance-right { text-align:left; width:100%; }
+      .card { padding:20px 16px; border-radius:16px; }
+      .tab-btn { font-size:0.7rem; padding:8px 6px; letter-spacing:0.03em; }
+      .form-input { font-size:1rem; padding:13px 14px; }
+      .action-btn { padding:15px; font-size:0.8rem; }
+      .tx-item { padding:12px; gap:10px; }
+      .tx-icon { width:34px; height:34px; font-size:0.9rem; border-radius:8px; }
+      .tx-title { font-size:0.82rem; }
+      .tx-amount { font-size:1rem; }
+      .modal { padding:28px 20px; border-radius:16px; }
+      .toast { bottom:16px; right:12px; left:12px; max-width:100%; }
+      footer { padding:16px; flex-direction:column; align-items:flex-start; gap:10px; }
+      .footer-links { gap:16px; flex-wrap:wrap; }
+      .mobile-nav { display:block; }
     }
-    .toast.show {
-      transform: translateY(0) scale(1); opacity: 1;
+    @media (max-width:380px) { .balance-amount{font-size:2.1rem} .brand-text h1{font-size:0.95rem} .tab-btn{font-size:0.62rem;padding:7px 4px} .card{padding:16px 12px} }
+    @supports (padding-bottom:env(safe-area-inset-bottom)) {
+      .mobile-nav { padding-bottom:calc(12px + env(safe-area-inset-bottom)); }
+      @media (max-width:768px) { main { padding-bottom:calc(90px + env(safe-area-inset-bottom)); } }
     }
-    .toast-icon {
-      width: 32px; height: 32px; border-radius: 8px;
-      display: flex; align-items: center; justify-content: center;
-      font-size: 0.9rem; flex-shrink: 0;
-    }
-    .toast-icon.success { background: rgba(46,204,138,0.15); }
-    .toast-icon.error { background: rgba(224,85,85,0.15); }
-    .toast-text { }
-    .toast-title { font-size: 0.85rem; font-weight: 500; }
-    .toast-sub { font-size: 0.73rem; color: var(--white-dim); margin-top: 2px; }
+    html { scroll-behavior:smooth; -webkit-overflow-scrolling:touch; }
 
-    /* ── FOOTER ── */
-    footer {
-      border-top: 1px solid var(--border);
-      padding: 24px 40px;
-      display: flex; align-items: center; justify-content: space-between;
-      flex-wrap: wrap; gap: 16px;
-      position: relative; z-index: 1;
-    }
-    .footer-brand {
-      font-family: 'Cormorant Garamond', serif;
-      font-size: 1rem; font-weight: 300;
-      letter-spacing: 0.14em; color: var(--white-dim);
-    }
-    .footer-brand span { color: var(--gold); }
-    .footer-links {
-      display: flex; gap: 24px;
-    }
-    .footer-links a {
-      font-size: 0.72rem; letter-spacing: 0.12em;
-      text-transform: uppercase; color: var(--white-dim);
-      text-decoration: none; transition: color 0.2s;
-    }
-    .footer-links a:hover { color: var(--gold); }
-    .footer-copy {
-      font-size: 0.68rem; color: rgba(245,242,236,0.3);
-      letter-spacing: 0.06em;
-    }
-
-    /* ── RESPONSIVE — TABLET ── */
-    @media (max-width: 900px) {
-      main { padding: 24px 20px 80px; gap: 16px; }
-      .balance-amount { font-size: 3rem; }
-    }
-
-    /* ── RESPONSIVE — MOBILE ── */
-    @media (max-width: 768px) {
-      /* Header */
-      header { padding: 14px 16px; }
-      .brand-text h1 { font-size: 1.1rem; letter-spacing: 0.08em; }
-      .brand-text p { font-size: 0.55rem; }
-      .logo-svg { width: 28px; height: 28px; }
-      .account-chip { font-size: 0.68rem; padding: 5px 10px; }
-      .logout-btn { font-size: 0.68rem; padding: 6px 10px; }
-
-      /* Layout */
-      main {
-        grid-template-columns: 1fr;
-        padding: 16px 12px 100px;
-        gap: 12px;
-      }
-      .balance-card { grid-column: 1; flex-direction: column; gap: 20px; }
-      .history-card { grid-column: 1; }
-
-      /* Balance card */
-      .balance-amount { font-size: 2.6rem; }
-      .balance-meta { gap: 16px; flex-wrap: wrap; }
-      .balance-right { text-align: left; width: 100%; }
-      .interest-badge { font-size: 0.72rem; }
-
-      /* Cards */
-      .card { padding: 20px 16px; border-radius: 16px; }
-      .card-label { font-size: 0.62rem; }
-
-      /* Tabs */
-      .tab-btn { font-size: 0.7rem; padding: 8px 6px; letter-spacing: 0.03em; }
-
-      /* Inputs */
-      .form-input { font-size: 1rem; padding: 13px 14px; }
-      .action-btn { padding: 15px; font-size: 0.8rem; }
-
-      /* Transaction items */
-      .tx-item { padding: 12px; gap: 10px; }
-      .tx-icon { width: 34px; height: 34px; font-size: 0.9rem; border-radius: 8px; }
-      .tx-title { font-size: 0.82rem; }
-      .tx-sub { font-size: 0.68rem; }
-      .tx-amount { font-size: 1rem; }
-
-      /* PIN screen — handled by clamp() globally */
-
-      /* Modal */
-      .modal { padding: 28px 20px; border-radius: 16px; }
-      .modal h3 { font-size: 1.2rem; }
-      .modal-amount { font-size: 1.8rem; }
-
-      /* Toast */
-      .toast {
-        bottom: 16px; right: 12px; left: 12px;
-        max-width: 100%; width: auto;
-      }
-
-      /* Footer */
-      footer {
-        padding: 16px;
-        flex-direction: column;
-        align-items: flex-start;
-        gap: 10px;
-      }
-      .footer-links { gap: 16px; flex-wrap: wrap; }
-      .footer-links a { font-size: 0.68rem; }
-      .footer-copy { font-size: 0.62rem; }
-    }
-
-    /* ── RESPONSIVE — SMALL PHONES (iPhone SE etc.) ── */
-    @media (max-width: 380px) {
-      .balance-amount { font-size: 2.1rem; }
-      .brand-text h1 { font-size: 0.95rem; }
-      .tab-btn { font-size: 0.62rem; padding: 7px 4px; }
-      .card { padding: 16px 12px; }
-    }
-
-    /* ── MOBILE BOTTOM NAV ── */
-    .mobile-nav {
-      display: none;
-      position: fixed; bottom: 0; left: 0; right: 0;
-      background: var(--navy-mid);
-      border-top: 1px solid var(--border);
-      padding: 10px 0 20px;
-      z-index: 20;
-      backdrop-filter: blur(12px);
-    }
-    .mobile-nav-inner {
-      display: flex; justify-content: space-around;
-      align-items: center;
-    }
-    .mobile-nav-btn {
-      display: flex; flex-direction: column;
-      align-items: center; gap: 4px;
-      background: none; border: none;
-      color: var(--white-dim); cursor: pointer;
-      font-family: 'DM Sans', sans-serif;
-      font-size: 0.6rem; letter-spacing: 0.08em;
-      text-transform: uppercase;
-      padding: 6px 16px;
-      border-radius: 10px;
-      transition: all 0.2s;
-    }
-    .mobile-nav-btn .nav-icon { font-size: 1.2rem; }
-    .mobile-nav-btn.active { color: var(--gold); }
-    .mobile-nav-btn.active .nav-icon { filter: drop-shadow(0 0 6px rgba(201,168,76,0.6)); }
-
-    @media (max-width: 768px) {
-      .mobile-nav { display: block; }
-    }
-
-    /* Safe area for notched phones */
-    @supports (padding-bottom: env(safe-area-inset-bottom)) {
-      .mobile-nav { padding-bottom: calc(12px + env(safe-area-inset-bottom)); }
-      @media (max-width: 768px) {
-        main { padding-bottom: calc(90px + env(safe-area-inset-bottom)); }
-      }
-    }
-
-    /* Smooth scroll on mobile */
-    html { scroll-behavior: smooth; -webkit-overflow-scrolling: touch; }
-
-    /* ── LOADING BAR ── */
-    .loading-bar {
-      position: fixed; top: 0; left: 0; height: 2px;
-      background: linear-gradient(90deg, var(--gold), var(--gold-light));
-      z-index: 999; width: 0; transition: width 0.4s ease;
-    }
-    .loading-bar.done { width: 100%; opacity: 0; transition: width 0.3s, opacity 0.4s 0.3s; }
+    /* UTIL */
+    .section-header { display:flex; align-items:center; justify-content:space-between; margin-bottom:16px; }
+    .add-btn { background:linear-gradient(135deg,var(--gold),var(--gold-dim)); border:none; border-radius:8px; padding:7px 14px; color:var(--navy); font-family:'DM Sans',sans-serif; font-size:0.72rem; font-weight:600; letter-spacing:0.08em; cursor:pointer; transition:all 0.2s; white-space:nowrap; }
+    .add-btn:hover { opacity:0.88; transform:translateY(-1px); }
+    .sub-form { display:none; background:rgba(0,0,0,0.22); border:1px solid var(--border); border-radius:12px; padding:16px; margin-bottom:16px; }
+    .sub-form.open { display:block; animation:slide-in 0.25s ease; }
+    .form-row { display:flex; gap:10px; margin-top:4px; }
+    .btn-cancel { flex:1; padding:12px; background:none; border:1px solid var(--border); border-radius:10px; color:var(--white-dim); font-family:'DM Sans',sans-serif; font-size:0.78rem; cursor:pointer; transition:all 0.2s; }
+    .btn-cancel:hover { border-color:var(--red); color:var(--red); }
+    .btn-save { flex:2; padding:12px; background:linear-gradient(135deg,var(--gold),var(--gold-dim)); border:none; border-radius:10px; color:var(--navy); font-family:'DM Sans',sans-serif; font-size:0.78rem; font-weight:600; cursor:pointer; }
+    .acct-item { display:flex; justify-content:space-between; align-items:center; padding:14px; background:rgba(0,0,0,0.2); border-radius:10px; border:1px solid rgba(201,168,76,0.08); animation:slide-in 0.3s ease; }
+    .acct-item.primary { border-color:rgba(46,204,138,0.25); }
+    .acct-label { font-size:0.78rem; color:var(--white); }
+    .acct-sub { font-size:0.72rem; color:var(--gold); margin-top:3px; letter-spacing:0.06em; }
+    .acct-bal { font-family:'Cormorant Garamond',serif; font-size:1.2rem; }
+    .acct-bal.primary { color:var(--green); }
+    .acct-bal.secondary { color:var(--white-dim); }
+    .active-dot { width:7px; height:7px; border-radius:50%; background:var(--green); box-shadow:0 0 6px rgba(46,204,138,0.8); display:inline-block; margin-right:6px; }
+    .ben-item { display:flex; align-items:center; gap:12px; padding:14px; background:rgba(0,0,0,0.2); border:1px solid rgba(201,168,76,0.1); border-radius:12px; animation:slide-in 0.3s ease; }
+    .ben-avatar { width:40px; height:40px; border-radius:50%; background:rgba(201,168,76,0.15); border:1px solid var(--border); display:flex; align-items:center; justify-content:center; font-family:'Cormorant Garamond',serif; font-size:1.1rem; color:var(--gold); flex-shrink:0; }
+    .ben-info { flex:1; min-width:0; }
+    .ben-name { font-size:0.88rem; font-weight:500; color:var(--white); }
+    .ben-sub { font-size:0.72rem; color:var(--gold); margin-top:2px; letter-spacing:0.03em; }
+    .ben-rel { font-size:0.68rem; color:var(--white-dim); margin-top:1px; }
+    .btn-remove { background:rgba(224,85,85,0.1); border:1px solid rgba(224,85,85,0.2); border-radius:8px; padding:6px 10px; color:#E05555; font-size:0.72rem; cursor:pointer; font-family:'DM Sans',sans-serif; flex-shrink:0; transition:all 0.2s; }
+    .btn-remove:hover { background:rgba(224,85,85,0.2); }
+    .empty-state { text-align:center; padding:32px; color:var(--white-dim); font-size:0.82rem; letter-spacing:0.06em; }
   </style>
 </head>
 <body>
@@ -694,11 +248,11 @@
 <div class="bg-glow2"></div>
 <div class="loading-bar" id="loading-bar"></div>
 
-<!-- ── PIN SCREEN ── -->
+<!-- PIN SCREEN -->
 <div id="pin-screen">
   <div class="pin-logo">
     <div class="logo-mark">
-      <svg width="64" height="64" viewBox="0 0 64 64" fill="none" xmlns="http://www.w3.org/2000/svg">
+      <svg width="56" height="56" viewBox="0 0 64 64" fill="none">
         <rect x="8" y="40" width="48" height="8" rx="2" fill="#C9A84C" opacity="0.9"/>
         <rect x="8" y="28" width="48" height="8" rx="2" fill="#C9A84C" opacity="0.65"/>
         <rect x="8" y="16" width="48" height="8" rx="2" fill="#C9A84C" opacity="0.4"/>
@@ -731,15 +285,15 @@
       <button class="num-btn clear" data-n="del">⌫</button>
     </div>
     <div class="pin-error" id="pin-error"></div>
-    <p class="pin-hint">Demo PIN: <strong style="color:var(--gold)">2476</strong></p>
+    <p class="pin-hint">PIN: <strong style="color:var(--gold)">2476</strong></p>
   </div>
 </div>
 
-<!-- ── MAIN APP ── -->
+<!-- MAIN APP -->
 <div id="app">
   <header>
     <div class="header-brand">
-      <svg class="logo-svg" viewBox="0 0 38 38" fill="none" xmlns="http://www.w3.org/2000/svg">
+      <svg class="logo-svg" viewBox="0 0 38 38" fill="none">
         <rect x="4" y="24" width="30" height="5" rx="1.5" fill="#C9A84C" opacity="0.9"/>
         <rect x="4" y="16.5" width="30" height="5" rx="1.5" fill="#C9A84C" opacity="0.65"/>
         <rect x="4" y="9" width="30" height="5" rx="1.5" fill="#C9A84C" opacity="0.4"/>
@@ -756,7 +310,7 @@
   </header>
 
   <main>
-    <!-- Balance Card -->
+    <!-- BALANCE -->
     <div class="card balance-card" id="section-balance">
       <div class="balance-left">
         <div class="card-label">Available Balance</div>
@@ -765,63 +319,32 @@
           <span id="balance-int">7,800,000</span><span class="balance-cents" id="balance-dec">.00</span>
         </div>
         <div class="balance-meta">
-          <div class="balance-meta-item">
+          <div>
             <div class="meta-label">Last Deposit</div>
             <div class="meta-val positive" id="last-dep-display">+$5,000,000.00</div>
           </div>
-          <div class="balance-meta-item">
-            <div class="meta-label">Last Withdrawal</div>
-            <div class="meta-val negative" id="last-wd-display">—</div>
-          </div>
-          <div class="balance-meta-item">
+          <div>
             <div class="meta-label">Account No.</div>
             <div class="meta-val" id="acct-no" style="color:var(--white-dim);font-size:0.82rem">—</div>
           </div>
         </div>
       </div>
       <div class="balance-right">
-        <div class="interest-badge">
-          <div class="dot"></div>
-          2.40% p.a. Interest
-        </div>
-        <div class="interest-earned">Accrued interest: <span id="interest-display">$0.00</span></div>
+        <div class="interest-badge"><div class="dot"></div>2.40% p.a. Interest</div>
+        <div class="interest-earned">Accrued interest: <span id="interest-display">$0.0000</span></div>
       </div>
     </div>
 
-    <!-- Deposit / Withdraw Card -->
+    <!-- TRANSACTIONS -->
     <div class="card transaction-card" id="section-transactions">
       <div class="card-label">Transactions</div>
       <div class="tab-row">
-        <button class="tab-btn active" data-tab="deposit">Deposit</button>
-        <button class="tab-btn" data-tab="withdraw">Withdraw</button>
-        <button class="tab-btn" data-tab="transfer">Transfer</button>
+        <button class="tab-btn active" data-tab="transfer">Transfer</button>
+        <button class="tab-btn" data-tab="beneficiary">Beneficiaries</button>
       </div>
 
-      <div class="tx-form active" id="form-deposit">
-        <div class="form-group">
-          <label>Amount (USD)</label>
-          <input type="number" class="form-input" id="deposit-input" placeholder="0.00" min="0.01" max="100000" step="0.01">
-        </div>
-        <div class="form-group">
-          <label>Note (optional)</label>
-          <input type="text" class="form-input" id="deposit-note" placeholder="e.g. Salary, Freelance...">
-        </div>
-        <button class="action-btn" id="deposit-btn">Confirm Deposit</button>
-      </div>
-
-      <div class="tx-form" id="form-withdraw">
-        <div class="form-group">
-          <label>Amount (USD)</label>
-          <input type="number" class="form-input" id="withdraw-input" placeholder="0.00" min="0.01" step="0.01">
-        </div>
-        <div class="form-group">
-          <label>Note (optional)</label>
-          <input type="text" class="form-input" id="withdraw-note" placeholder="e.g. Rent, Bills...">
-        </div>
-        <button class="action-btn" id="withdraw-btn" style="background:linear-gradient(135deg,#c0392b,#922b21)">Confirm Withdrawal</button>
-      </div>
-
-      <div class="tx-form" id="form-transfer">
+      <!-- TRANSFER -->
+      <div class="tx-form active" id="form-transfer">
         <div class="form-group">
           <label>Transfer Type</label>
           <select class="form-input" id="transfer-type" onchange="handleTransferType()">
@@ -832,7 +355,6 @@
             <option value="swift">International SWIFT Transfer</option>
           </select>
         </div>
-        <!-- Internal -->
         <div id="transfer-internal" style="display:none">
           <div class="form-group">
             <label>Destination Account</label>
@@ -842,54 +364,21 @@
             </select>
           </div>
         </div>
-        <!-- Private -->
         <div id="transfer-private" style="display:none">
-          <div class="form-group">
-            <label>Recipient Full Name</label>
-            <input type="text" class="form-input" id="priv-name" placeholder="e.g. James Whitfield">
-          </div>
-          <div class="form-group">
-            <label>Account Number</label>
-            <input type="text" class="form-input" id="priv-acct" placeholder="e.g. 0094-8821-3300">
-          </div>
-          <div class="form-group">
-            <label>Bank Name</label>
-            <input type="text" class="form-input" id="priv-bank" placeholder="e.g. First National Bank">
-          </div>
+          <div class="form-group"><label>Recipient Full Name</label><input type="text" class="form-input" id="priv-name" placeholder="e.g. James Whitfield"></div>
+          <div class="form-group"><label>Account Number</label><input type="text" class="form-input" id="priv-acct" placeholder="e.g. 0094882133"></div>
+          <div class="form-group"><label>Bank Name</label><input type="text" class="form-input" id="priv-bank" placeholder="e.g. First National Bank"></div>
         </div>
-        <!-- Wire -->
         <div id="transfer-wire" style="display:none">
-          <div class="form-group">
-            <label>Recipient Name</label>
-            <input type="text" class="form-input" id="wire-name" placeholder="Full legal name">
-          </div>
-          <div class="form-group">
-            <label>Routing Number</label>
-            <input type="text" class="form-input" id="wire-routing" placeholder="9-digit ABA routing number" maxlength="9">
-          </div>
-          <div class="form-group">
-            <label>Account Number</label>
-            <input type="text" class="form-input" id="wire-acct" placeholder="Recipient account number">
-          </div>
+          <div class="form-group"><label>Recipient Name</label><input type="text" class="form-input" id="wire-name" placeholder="Full legal name"></div>
+          <div class="form-group"><label>Routing Number</label><input type="text" class="form-input" id="wire-routing" placeholder="9-digit ABA routing number" maxlength="9"></div>
+          <div class="form-group"><label>Account Number</label><input type="text" class="form-input" id="wire-acct" placeholder="Recipient account number"></div>
         </div>
-        <!-- SWIFT -->
         <div id="transfer-swift" style="display:none">
-          <div class="form-group">
-            <label>Beneficiary Name</label>
-            <input type="text" class="form-input" id="swift-name" placeholder="Full legal name">
-          </div>
-          <div class="form-group">
-            <label>SWIFT / BIC Code</label>
-            <input type="text" class="form-input" id="swift-code" placeholder="e.g. BARCGB22XXX" maxlength="11">
-          </div>
-          <div class="form-group">
-            <label>IBAN / Account Number</label>
-            <input type="text" class="form-input" id="swift-iban" placeholder="e.g. GB29NWBK60161331926819">
-          </div>
-          <div class="form-group">
-            <label>Country</label>
-            <input type="text" class="form-input" id="swift-country" placeholder="e.g. United Kingdom">
-          </div>
+          <div class="form-group"><label>Beneficiary Name</label><input type="text" class="form-input" id="swift-name" placeholder="Full legal name"></div>
+          <div class="form-group"><label>SWIFT / BIC Code</label><input type="text" class="form-input" id="swift-code" placeholder="e.g. BARCGB22XXX" maxlength="11"></div>
+          <div class="form-group"><label>IBAN / Account Number</label><input type="text" class="form-input" id="swift-iban" placeholder="e.g. GB29NWBK60161331926819"></div>
+          <div class="form-group"><label>Country</label><input type="text" class="form-input" id="swift-country" placeholder="e.g. United Kingdom"></div>
         </div>
         <div class="form-group" id="transfer-amount-group" style="display:none">
           <label>Amount (USD)</label>
@@ -899,46 +388,67 @@
           <label>Reference / Note</label>
           <input type="text" class="form-input" id="transfer-ref" placeholder="Payment reference or memo">
         </div>
-        <button class="action-btn" id="transfer-btn" style="display:none;background:linear-gradient(135deg,var(--gold),var(--gold-dim))">Initiate Transfer</button>
+        <button class="action-btn" id="transfer-btn" style="display:none">Initiate Transfer</button>
+      </div>
+
+      <!-- BENEFICIARIES -->
+      <div class="tx-form" id="form-beneficiary">
+        <div class="section-header">
+          <div class="card-label" style="margin-bottom:0">Saved Beneficiaries</div>
+          <button class="add-btn" id="ben-toggle-btn" onclick="toggleBenForm()">+ Add New</button>
+        </div>
+        <div class="sub-form" id="ben-add-form">
+          <div class="form-group"><label>Full Name</label><input type="text" class="form-input" id="ben-name" placeholder="e.g. Sarah Johnson"></div>
+          <div class="form-group"><label>Account Number</label><input type="text" class="form-input" id="ben-acct" placeholder="e.g. 0094882133"></div>
+          <div class="form-group"><label>Bank Name</label><input type="text" class="form-input" id="ben-bank" placeholder="e.g. Chase Bank"></div>
+          <div class="form-group"><label>Relationship (optional)</label><input type="text" class="form-input" id="ben-rel" placeholder="e.g. Business Partner, Family"></div>
+          <div class="form-row">
+            <button class="btn-cancel" onclick="toggleBenForm()">Cancel</button>
+            <button class="btn-save" onclick="saveBeneficiary()">Save Beneficiary</button>
+          </div>
+        </div>
+        <div id="ben-list"><div class="empty-state">No beneficiaries yet. Add one above.</div></div>
       </div>
     </div>
 
-    <!-- Accounts Summary Card -->
+    <!-- ACCOUNTS -->
     <div class="card" id="section-accounts">
-      <div class="card-label">Account Summary</div>
-      <div style="display:flex;flex-direction:column;gap:14px;margin-top:8px">
-        <div style="display:flex;justify-content:space-between;align-items:center;padding:12px;background:rgba(0,0,0,0.2);border-radius:10px;border:1px solid rgba(201,168,76,0.08)">
-          <div>
-            <div style="font-size:0.78rem;color:var(--white-dim)">Checking</div>
-            <div style="font-size:0.72rem;color:var(--gold);margin-top:2px;letter-spacing:0.06em" id="summary-acct-no">—</div>
-          </div>
-          <div style="font-family:'Cormorant Garamond',serif;font-size:1.2rem;color:var(--green)" id="summary-balance">$7,800,000.00</div>
+      <div class="section-header">
+        <div class="card-label" style="margin-bottom:0">Account Summary</div>
+        <button class="add-btn" onclick="toggleAddAccountForm()">+ Add Account</button>
+      </div>
+      <div class="sub-form" id="add-acct-form">
+        <div class="form-group">
+          <label>Account Type</label>
+          <select class="form-input" id="new-acct-type">
+            <option value="">Select account type</option>
+            <option value="Savings">Savings Account</option>
+            <option value="Investment">Investment Portfolio</option>
+            <option value="Business">Business Account</option>
+            <option value="Fixed Deposit">Fixed Deposit</option>
+            <option value="Money Market">Money Market</option>
+          </select>
         </div>
-        <div style="display:flex;justify-content:space-between;align-items:center;padding:12px;background:rgba(0,0,0,0.2);border-radius:10px;border:1px solid rgba(201,168,76,0.08)">
-          <div>
-            <div style="font-size:0.78rem;color:var(--white-dim)">Savings</div>
-            <div style="font-size:0.72rem;color:var(--gold);margin-top:2px;letter-spacing:0.06em">SAV-7829</div>
-          </div>
-          <div style="font-family:'Cormorant Garamond',serif;font-size:1.2rem;color:var(--white-dim)">$4,250.00</div>
+        <div class="form-group"><label>Account Nickname (optional)</label><input type="text" class="form-input" id="new-acct-nick" placeholder="e.g. Holiday Fund, Business Ops"></div>
+        <div class="form-group"><label>Opening Balance (USD)</label><input type="number" class="form-input" id="new-acct-bal" placeholder="0.00" min="0" step="0.01"></div>
+        <div class="form-row">
+          <button class="btn-cancel" onclick="toggleAddAccountForm()">Cancel</button>
+          <button class="btn-save" onclick="saveNewAccount()">Open Account</button>
         </div>
-        <div style="display:flex;justify-content:space-between;align-items:center;padding:12px;background:rgba(0,0,0,0.2);border-radius:10px;border:1px solid rgba(201,168,76,0.08)">
-          <div>
-            <div style="font-size:0.78rem;color:var(--white-dim)">Investment</div>
-            <div style="font-size:0.72rem;color:var(--gold);margin-top:2px;letter-spacing:0.06em">INV-3341</div>
-          </div>
-          <div style="font-family:'Cormorant Garamond',serif;font-size:1.2rem;color:var(--white-dim)">$12,800.00</div>
-        </div>
+      </div>
+      <div id="accounts-list" style="display:flex;flex-direction:column;gap:12px">
+        <!-- Populated by JS -->
       </div>
     </div>
 
-    <!-- History Card -->
+    <!-- HISTORY -->
     <div class="card history-card" id="section-history">
       <div class="history-header">
         <div class="card-label" style="margin-bottom:0">Transaction History</div>
         <div class="history-count" id="tx-count">0 transactions</div>
       </div>
       <div class="tx-list" id="tx-list">
-        <div class="no-tx">No transactions yet. Make your first deposit above.</div>
+        <div class="no-tx">No transactions yet.</div>
       </div>
     </div>
   </main>
@@ -946,40 +456,29 @@
   <footer>
     <div class="footer-brand">BANK OF <span>AMERICA</span></div>
     <div class="footer-links">
-      <a href="#">Privacy</a>
-      <a href="#">Security</a>
-      <a href="#">Support</a>
-      <a href="#">Terms</a>
+      <a href="#">Privacy</a><a href="#">Security</a><a href="#">Support</a><a href="#">Terms</a>
     </div>
     <div class="footer-copy">© 2026 Bank of America Financial Group. FDIC Insured.</div>
   </footer>
 </div>
 
-<!-- ── MOBILE BOTTOM NAV ── -->
-<nav class="mobile-nav" id="mobile-nav">
+<!-- MOBILE NAV -->
+<nav class="mobile-nav">
   <div class="mobile-nav-inner">
-    <button class="mobile-nav-btn active" onclick="mobileNav('balance', this)">
-      <span class="nav-icon">💳</span>Balance
-    </button>
-    <button class="mobile-nav-btn" onclick="mobileNav('transactions', this)">
-      <span class="nav-icon">↕</span>Transact
-    </button>
-    <button class="mobile-nav-btn" onclick="mobileNav('history', this)">
-      <span class="nav-icon">🕐</span>History
-    </button>
-    <button class="mobile-nav-btn" onclick="mobileNav('accounts', this)">
-      <span class="nav-icon">🏦</span>Accounts
-    </button>
+    <button class="mobile-nav-btn active" onclick="mobileNav('balance',this)"><span class="nav-icon">💳</span>Balance</button>
+    <button class="mobile-nav-btn" onclick="mobileNav('transactions',this)"><span class="nav-icon">↕</span>Transact</button>
+    <button class="mobile-nav-btn" onclick="mobileNav('history',this)"><span class="nav-icon">🕐</span>History</button>
+    <button class="mobile-nav-btn" onclick="mobileNav('accounts',this)"><span class="nav-icon">🏦</span>Accounts</button>
   </div>
 </nav>
 
-
+<!-- MODAL -->
 <div class="modal-overlay" id="modal-overlay">
   <div class="modal">
-    <div class="modal-icon" id="modal-icon">💰</div>
-    <h3 id="modal-title">Confirm Transaction</h3>
-    <p id="modal-desc">You are about to process the following transaction:</p>
-    <div class="modal-amount" id="modal-amount">$0.00</div>
+    <div class="modal-icon" id="modal-icon">⇄</div>
+    <h3 id="modal-title">Confirm</h3>
+    <p id="modal-desc"></p>
+    <div class="modal-amount" id="modal-amount"></div>
     <p id="modal-sub" style="font-size:0.75rem;color:var(--white-dim)"></p>
     <div class="modal-btns">
       <button class="modal-btn-cancel" id="modal-cancel">Cancel</button>
@@ -988,7 +487,7 @@
   </div>
 </div>
 
-<!-- ── TOAST ── -->
+<!-- TOAST -->
 <div class="toast" id="toast">
   <div class="toast-icon success" id="toast-icon">✓</div>
   <div class="toast-text">
@@ -1005,16 +504,22 @@
   let transactions = [];
   let interestAccrued = 0;
   let pendingAction = null;
-  const ACCOUNT_NO = 'CHK-' + Math.floor(1000 + Math.random() * 9000);
+  let beneficiaries = [];
+  let extraAccounts = [];
   const ANNUAL_RATE = 0.024;
 
-  // ── PIN LOGIC ──
+  // Generate 10-digit account number
+  const ACCT_SUFFIX = Math.floor(1000 + Math.random() * 9000);
+  const ACCT_PREFIX = Math.floor(100000 + Math.random() * 900000);
+  const ACCOUNT_NO = '10' + ACCT_PREFIX + ACCT_SUFFIX;
+
+  // ── PIN ──
   document.querySelectorAll('.num-btn').forEach(btn => {
     btn.addEventListener('click', () => {
       const n = btn.dataset.n;
-      if (n === 'clear') { pinEntry = ''; }
-      else if (n === 'del') { pinEntry = pinEntry.slice(0, -1); }
-      else if (pinEntry.length < 4) { pinEntry += n; }
+      if (n === 'clear') pinEntry = '';
+      else if (n === 'del') pinEntry = pinEntry.slice(0, -1);
+      else if (pinEntry.length < 4) pinEntry += n;
       updateDots();
       if (pinEntry.length === 4) setTimeout(checkPin, 150);
     });
@@ -1022,16 +527,14 @@
 
   function updateDots() {
     for (let i = 0; i < 4; i++) {
-      const d = document.getElementById('d' + i);
-      d.classList.toggle('filled', i < pinEntry.length);
+      document.getElementById('d' + i).classList.toggle('filled', i < pinEntry.length);
     }
   }
 
   function checkPin() {
     if (pinEntry === CORRECT_PIN) {
       document.getElementById('pin-screen').classList.add('hidden');
-      const app = document.getElementById('app');
-      app.classList.add('visible');
+      document.getElementById('app').classList.add('visible');
       const lb = document.getElementById('loading-bar');
       lb.style.width = '100%';
       setTimeout(() => lb.classList.add('done'), 400);
@@ -1042,7 +545,7 @@
         setTimeout(() => d.classList.remove('shake'), 400);
       });
       pinEntry = '';
-      setTimeout(() => { updateDots(); document.getElementById('pin-error').textContent = ''; }, 600);
+      setTimeout(() => { updateDots(); document.getElementById('pin-error').textContent = ''; }, 700);
     }
   }
 
@@ -1065,23 +568,18 @@
     });
   });
 
-  // ── BALANCE DISPLAY ──
-  function formatBalance(val) {
-    const [int, dec] = val.toFixed(2).split('.');
-    return { int: parseInt(int).toLocaleString(), dec };
-  }
-
+  // ── BALANCE ──
   function animateBalance(newVal, oldVal) {
-    const duration = 600;
+    const duration = 700;
     const start = performance.now();
     function step(now) {
       const p = Math.min((now - start) / duration, 1);
       const ease = 1 - Math.pow(1 - p, 3);
       const curr = oldVal + (newVal - oldVal) * ease;
-      const { int, dec } = formatBalance(curr);
-      document.getElementById('balance-int').textContent = int;
+      const [int, dec] = curr.toFixed(2).split('.');
+      document.getElementById('balance-int').textContent = parseInt(int).toLocaleString();
       document.getElementById('balance-dec').textContent = '.' + dec;
-      document.getElementById('summary-balance').textContent = '$' + curr.toFixed(2);
+      document.getElementById('summary-balance') && (document.getElementById('summary-balance').textContent = '$' + curr.toLocaleString('en-US', {minimumFractionDigits:2, maximumFractionDigits:2}));
       if (p < 1) requestAnimationFrame(step);
     }
     requestAnimationFrame(step);
@@ -1121,12 +619,14 @@
     toastTimer = setTimeout(() => t.classList.remove('show'), 3200);
   }
 
-  // ── TRANSACTION LOG ──
+  // ── HISTORY ──
   function addTransaction(type, amount, note) {
     const now = new Date();
-    const time = now.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' });
-    const date = now.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
-    transactions.unshift({ type, amount, note, time, date });
+    transactions.unshift({
+      type, amount, note,
+      time: now.toLocaleTimeString('en-US', {hour:'2-digit', minute:'2-digit'}),
+      date: now.toLocaleDateString('en-US', {month:'short', day:'numeric'})
+    });
     renderHistory();
   }
 
@@ -1134,71 +634,27 @@
     const list = document.getElementById('tx-list');
     const count = document.getElementById('tx-count');
     count.textContent = transactions.length + ' transaction' + (transactions.length !== 1 ? 's' : '');
-    if (transactions.length === 0) {
-      list.innerHTML = '<div class="no-tx">No transactions yet. Make your first deposit above.</div>';
-      return;
-    }
-    list.innerHTML = transactions.slice(0, 20).map(tx => {
-      const icons = { deposit: '↓', withdraw: '↑', transfer: '⇄' };
-      const labels = { deposit: 'Deposit', withdraw: 'Withdrawal', transfer: 'Transfer' };
-      const sign = tx.type === 'deposit' ? '+' : tx.type === 'withdraw' ? '−' : '→';
-      return `<div class="tx-item">
-        <div class="tx-icon ${tx.type}">${icons[tx.type]}</div>
+    if (!transactions.length) { list.innerHTML = '<div class="no-tx">No transactions yet.</div>'; return; }
+    const icons = { deposit:'↓', transfer:'⇄' };
+    const signs = { deposit:'+', transfer:'→' };
+    list.innerHTML = transactions.slice(0, 20).map(tx => `
+      <div class="tx-item">
+        <div class="tx-icon ${tx.type}">${icons[tx.type] || '⇄'}</div>
         <div class="tx-info">
-          <div class="tx-title">${labels[tx.type]}${tx.note ? ' · ' + tx.note : ''}</div>
+          <div class="tx-title">${tx.type === 'deposit' ? 'Deposit' : 'Transfer'}${tx.note ? ' · ' + tx.note : ''}</div>
           <div class="tx-sub">${ACCOUNT_NO} · ${tx.date}</div>
         </div>
         <div>
-          <div class="tx-amount ${tx.type}">${sign}$${parseFloat(tx.amount).toLocaleString('en-US', {minimumFractionDigits:2,maximumFractionDigits:2})}</div>
+          <div class="tx-amount ${tx.type}">${signs[tx.type] || '→'}$${parseFloat(tx.amount).toLocaleString('en-US',{minimumFractionDigits:2,maximumFractionDigits:2})}</div>
           <div class="tx-time">${tx.time}</div>
         </div>
-      </div>`;
-    }).join('');
+      </div>`).join('');
   }
 
-  // ── DEPOSIT ──
-  document.getElementById('deposit-btn').addEventListener('click', () => {
-    const val = parseFloat(document.getElementById('deposit-input').value);
-    const note = document.getElementById('deposit-note').value.trim();
-    if (isNaN(val) || val <= 0) return showToast(false, 'Invalid Amount', 'Please enter a valid deposit amount.');
-    if (val > 5000000) return showToast(false, 'Limit Exceeded', 'Single deposit limit is $5,000,000.');
-    showModal('💰', 'Confirm Deposit', 'You are about to deposit:', '$' + val.toLocaleString('en-US', {minimumFractionDigits:2}), note || 'No note', () => {
-      const old = balance;
-      balance += val;
-      animateBalance(balance, old);
-      document.getElementById('last-dep-display').textContent = '+$' + val.toFixed(2);
-      addTransaction('deposit', val, note);
-      document.getElementById('deposit-input').value = '';
-      document.getElementById('deposit-note').value = '';
-      showToast(true, 'Deposit Successful', '$' + val.toFixed(2) + ' added to your account.');
-    });
-  });
-
-  // ── WITHDRAW ──
-  document.getElementById('withdraw-btn').addEventListener('click', () => {
-    const val = parseFloat(document.getElementById('withdraw-input').value);
-    const note = document.getElementById('withdraw-note').value.trim();
-    if (isNaN(val) || val <= 0) return showToast(false, 'Invalid Amount', 'Please enter a valid withdrawal amount.');
-    if (val > balance) return showToast(false, 'Insufficient Funds', 'Your balance is $' + balance.toFixed(2) + '.');
-    if (val > 50000) return showToast(false, 'Limit Exceeded', 'Single withdrawal limit is $50,000.');
-    showModal('🏧', 'Confirm Withdrawal', 'You are about to withdraw:', '$' + val.toLocaleString('en-US', {minimumFractionDigits:2}), note || 'No note', () => {
-      const old = balance;
-      balance -= val;
-      animateBalance(balance, old);
-      document.getElementById('last-wd-display').textContent = '−$' + val.toFixed(2);
-      addTransaction('withdraw', val, note);
-      document.getElementById('withdraw-input').value = '';
-      document.getElementById('withdraw-note').value = '';
-      showToast(true, 'Withdrawal Processed', '$' + val.toFixed(2) + ' removed from your account.');
-    });
-  });
-
-  // ── TRANSFER TYPE HANDLER ──
+  // ── TRANSFER TYPE ──
   function handleTransferType() {
     const type = document.getElementById('transfer-type').value;
-    ['internal','private','wire','swift'].forEach(t => {
-      document.getElementById('transfer-' + t).style.display = 'none';
-    });
+    ['internal','private','wire','swift'].forEach(t => document.getElementById('transfer-' + t).style.display = 'none');
     document.getElementById('transfer-amount-group').style.display = 'none';
     document.getElementById('transfer-ref-group').style.display = 'none';
     document.getElementById('transfer-btn').style.display = 'none';
@@ -1215,10 +671,9 @@
     const val = parseFloat(document.getElementById('transfer-input').value);
     const ref = document.getElementById('transfer-ref').value.trim();
     if (!type) return showToast(false, 'No Transfer Type', 'Please select a transfer type.');
-    if (isNaN(val) || val <= 0) return showToast(false, 'Invalid Amount', 'Please enter a valid transfer amount.');
+    if (isNaN(val) || val <= 0) return showToast(false, 'Invalid Amount', 'Please enter a valid amount.');
     if (val > balance) return showToast(false, 'Insufficient Funds', 'Your balance is $' + balance.toLocaleString('en-US',{minimumFractionDigits:2}) + '.');
-
-    let dest = ''; let modalSub = ref || 'No reference';
+    let dest = '', modalSub = ref || 'No reference';
     if (type === 'internal') {
       dest = document.getElementById('transfer-internal-dest').value;
     } else if (type === 'private') {
@@ -1226,32 +681,28 @@
       const acct = document.getElementById('priv-acct').value.trim();
       const bank = document.getElementById('priv-bank').value.trim();
       if (!name || !acct || !bank) return showToast(false, 'Missing Details', 'Please fill in all recipient fields.');
-      dest = name + ' · ' + acct;
-      modalSub = bank + (ref ? ' · ' + ref : '');
+      dest = name + ' · ' + acct; modalSub = bank + (ref ? ' · ' + ref : '');
     } else if (type === 'wire') {
       const name = document.getElementById('wire-name').value.trim();
       const routing = document.getElementById('wire-routing').value.trim();
       const acct = document.getElementById('wire-acct').value.trim();
-      if (!name || !routing || !acct) return showToast(false, 'Missing Details', 'Please fill in all wire transfer fields.');
+      if (!name || !routing || !acct) return showToast(false, 'Missing Details', 'Please fill in all wire fields.');
       if (routing.length !== 9 || isNaN(routing)) return showToast(false, 'Invalid Routing', 'Routing number must be 9 digits.');
-      dest = name + ' · ' + acct;
-      modalSub = 'Routing: ' + routing + (ref ? ' · ' + ref : '');
+      dest = name + ' · ' + acct; modalSub = 'Routing: ' + routing + (ref ? ' · ' + ref : '');
     } else if (type === 'swift') {
       const name = document.getElementById('swift-name').value.trim();
       const code = document.getElementById('swift-code').value.trim();
       const iban = document.getElementById('swift-iban').value.trim();
       const country = document.getElementById('swift-country').value.trim();
-      if (!name || !code || !iban || !country) return showToast(false, 'Missing Details', 'Please fill in all SWIFT transfer fields.');
-      dest = name + ' · ' + iban;
-      modalSub = 'SWIFT: ' + code + ' · ' + country + (ref ? ' · ' + ref : '');
+      if (!name || !code || !iban || !country) return showToast(false, 'Missing Details', 'Please fill in all SWIFT fields.');
+      dest = name + ' · ' + iban; modalSub = 'SWIFT: ' + code + ' · ' + country + (ref ? ' · ' + ref : '');
     }
-
-    const typeLabels = { internal: 'Internal Transfer', private: 'Private Transfer', wire: 'Wire Transfer', swift: 'SWIFT Transfer' };
-    showModal('⇄', typeLabels[type], 'Sending to: ' + dest, '$' + val.toLocaleString('en-US', {minimumFractionDigits:2}), modalSub, () => {
+    const labels = { internal:'Internal Transfer', private:'Private Transfer', wire:'Wire Transfer', swift:'SWIFT Transfer' };
+    showModal('⇄', labels[type], 'Sending to: ' + dest, '$' + val.toLocaleString('en-US',{minimumFractionDigits:2}), modalSub, () => {
       const old = balance;
       balance -= val;
       animateBalance(balance, old);
-      addTransaction('transfer', val, typeLabels[type] + ' → ' + dest.split(' · ')[0] + (ref ? ' · ' + ref : ''));
+      addTransaction('transfer', val, labels[type] + ' → ' + dest.split(' · ')[0] + (ref ? ' · ' + ref : ''));
       document.getElementById('transfer-type').value = '';
       document.getElementById('transfer-input').value = '';
       document.getElementById('transfer-ref').value = '';
@@ -1260,27 +711,123 @@
     });
   });
 
+  // ── BENEFICIARIES ──
+  function toggleBenForm() {
+    const form = document.getElementById('ben-add-form');
+    const btn = document.getElementById('ben-toggle-btn');
+    const opening = !form.classList.contains('open');
+    form.classList.toggle('open');
+    btn.textContent = opening ? '✕ Close' : '+ Add New';
+    if (!opening) {
+      ['ben-name','ben-acct','ben-bank','ben-rel'].forEach(id => document.getElementById(id).value = '');
+    }
+  }
+
+  function saveBeneficiary() {
+    const name = document.getElementById('ben-name').value.trim();
+    const acct = document.getElementById('ben-acct').value.trim();
+    const bank = document.getElementById('ben-bank').value.trim();
+    const rel  = document.getElementById('ben-rel').value.trim();
+    if (!name) return showToast(false, 'Missing Name', 'Please enter the beneficiary name.');
+    if (!acct) return showToast(false, 'Missing Account', 'Please enter an account number.');
+    if (!bank) return showToast(false, 'Missing Bank', 'Please enter the bank name.');
+    beneficiaries.unshift({ id: Date.now(), name, acct, bank, rel });
+    renderBeneficiaries();
+    toggleBenForm();
+    showToast(true, 'Beneficiary Saved', name + ' has been added.');
+  }
+
+  function deleteBeneficiary(id) {
+    beneficiaries = beneficiaries.filter(b => b.id !== id);
+    renderBeneficiaries();
+    showToast(true, 'Removed', 'Beneficiary has been deleted.');
+  }
+
+  function renderBeneficiaries() {
+    const list = document.getElementById('ben-list');
+    if (!beneficiaries.length) { list.innerHTML = '<div class="empty-state">No beneficiaries yet. Add one above.</div>'; return; }
+    list.innerHTML = beneficiaries.map(b => `
+      <div class="ben-item">
+        <div class="ben-avatar">${b.name.charAt(0).toUpperCase()}</div>
+        <div class="ben-info">
+          <div class="ben-name">${b.name}</div>
+          <div class="ben-sub">${b.acct} · ${b.bank}</div>
+          ${b.rel ? `<div class="ben-rel">${b.rel}</div>` : ''}
+        </div>
+        <button class="btn-remove" onclick="deleteBeneficiary(${b.id})">Remove</button>
+      </div>`).join('');
+  }
+
+  // ── ACCOUNTS ──
+  const defaultAccounts = [
+    { id: 'primary', label: 'Checking', sub: ACCOUNT_NO, balance: null, primary: true },
+    { id: 'sav', label: 'Savings', sub: 'SAV-7829', balance: 4250.00, primary: false },
+    { id: 'inv', label: 'Investment Portfolio', sub: 'INV-3341', balance: 12800.00, primary: false },
+  ];
+
+  function toggleAddAccountForm() {
+    const form = document.getElementById('add-acct-form');
+    const opening = !form.classList.contains('open');
+    form.classList.toggle('open');
+    if (!opening) {
+      document.getElementById('new-acct-type').value = '';
+      document.getElementById('new-acct-nick').value = '';
+      document.getElementById('new-acct-bal').value = '';
+    }
+  }
+
+  function saveNewAccount() {
+    const type = document.getElementById('new-acct-type').value;
+    const nick = document.getElementById('new-acct-nick').value.trim();
+    const bal  = parseFloat(document.getElementById('new-acct-bal').value) || 0;
+    if (!type) return showToast(false, 'Select Account Type', 'Please choose an account type to open.');
+    const prefixes = { Savings:'SAV', Investment:'INV', Business:'BUS', 'Fixed Deposit':'FXD', 'Money Market':'MMK' };
+    const newNo = prefixes[type] + '-' + Math.floor(1000 + Math.random() * 9000);
+    extraAccounts.push({ id: Date.now(), label: nick || type, sub: newNo, balance: bal, primary: false });
+    renderAccounts();
+    toggleAddAccountForm();
+    showToast(true, 'Account Opened', (nick || type) + ' account ' + newNo + ' is now active.');
+  }
+
+  function renderAccounts() {
+    const list = document.getElementById('accounts-list');
+    const all = [...defaultAccounts, ...extraAccounts];
+    list.innerHTML = all.map(a => {
+      const isP = a.primary;
+      const bal = isP
+        ? '$' + balance.toLocaleString('en-US',{minimumFractionDigits:2,maximumFractionDigits:2})
+        : '$' + a.balance.toLocaleString('en-US',{minimumFractionDigits:2,maximumFractionDigits:2});
+      return `<div class="acct-item ${isP ? 'primary' : ''}">
+        <div>
+          <div class="acct-label">${isP ? '<span class="active-dot"></span>' : ''}${a.label}${isP ? ' — Active' : ''}</div>
+          <div class="acct-sub">${a.sub}</div>
+        </div>
+        <div class="acct-bal ${isP ? 'primary' : 'secondary'}" ${isP ? 'id="summary-balance"' : ''}>${bal}</div>
+      </div>`;
+    }).join('');
+  }
+
   // ── MOBILE NAV ──
   function mobileNav(section, btn) {
     document.querySelectorAll('.mobile-nav-btn').forEach(b => b.classList.remove('active'));
     btn.classList.add('active');
     const el = document.getElementById('section-' + section);
-    if (el) el.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    if (el) el.scrollIntoView({ behavior:'smooth', block:'start' });
   }
 
-  // ── INIT (runs after all functions defined) ──
-  document.getElementById('header-acct').textContent = ACCOUNT_NO;
+  // ── INIT ──
+  document.getElementById('header-acct').textContent = '••••' + ACCT_SUFFIX;
   document.getElementById('acct-no').textContent = ACCOUNT_NO;
-  document.getElementById('summary-acct-no').textContent = ACCOUNT_NO;
-  transactions.unshift({ type: 'deposit', amount: 5000000, note: 'Wire Transfer', time: '09:14 AM', date: 'Jun 4' });
+  transactions.unshift({ type:'deposit', amount:5000000, note:'Wire Transfer', time:'09:14 AM', date:'Jun 4' });
   renderHistory();
+  renderAccounts();
+  renderBeneficiaries();
 
-  // Interest accrual — ticks every 30s for demo
+  // Interest accrual
   setInterval(() => {
-    const daily = balance * (ANNUAL_RATE / 365);
-    interestAccrued += daily / 2880;
+    interestAccrued += balance * (ANNUAL_RATE / 365) / 2880;
     document.getElementById('interest-display').textContent = '$' + interestAccrued.toFixed(4);
   }, 30000);
-
-</script></body>
+</script>
+</body>
 </html>
