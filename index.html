@@ -355,6 +355,7 @@
       <div class="card-label">Transactions</div>
       <div class="tab-row">
         <button class="tab-btn active" data-tab="transfer">Transfer</button>
+        <button class="tab-btn" data-tab="pay">Pay Beneficiary</button>
         <button class="tab-btn" data-tab="beneficiary">Beneficiaries</button>
       </div>
 
@@ -410,6 +411,55 @@
           <input type="text" class="form-input" id="transfer-ref" placeholder="Payment reference or memo">
         </div>
         <button class="action-btn" id="transfer-btn" style="display:none">Initiate Transfer</button>
+      </div>
+
+      <!-- PAY BENEFICIARY -->
+      <div class="tx-form" id="form-pay">
+
+        <!-- Empty state when no beneficiaries -->
+        <div id="pay-empty" style="display:none">
+          <div class="empty-state" style="padding:24px">
+            No beneficiaries saved yet.<br>
+            <span style="font-size:0.75rem;color:var(--gold);cursor:pointer" onclick="document.querySelector('[data-tab=beneficiary]').click()">Go to Beneficiaries tab to add one →</span>
+          </div>
+        </div>
+
+        <!-- Pay form -->
+        <div id="pay-form-inner">
+          <div class="form-group">
+            <label>Pay From Account</label>
+            <select class="form-input" id="pay-from-account">
+              <option value="">Select source account</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label>Select Beneficiary</label>
+            <select class="form-input" id="pay-ben-select" onchange="onPayBenSelect()">
+              <option value="">— Choose a beneficiary —</option>
+            </select>
+          </div>
+
+          <!-- Beneficiary detail card (shown after selection) -->
+          <div id="pay-ben-card" style="display:none;background:rgba(0,0,0,0.2);border:1px solid var(--border);border-radius:12px;padding:14px;margin-bottom:16px">
+            <div style="display:flex;align-items:center;gap:12px">
+              <div class="ben-avatar" id="pay-ben-avatar" style="width:36px;height:36px;font-size:1rem">?</div>
+              <div>
+                <div style="font-size:0.88rem;font-weight:500;color:var(--white)" id="pay-ben-name">—</div>
+                <div style="font-size:0.72rem;color:var(--gold);margin-top:2px" id="pay-ben-detail">—</div>
+              </div>
+            </div>
+          </div>
+
+          <div class="form-group">
+            <label>Amount (USD)</label>
+            <input type="number" class="form-input" id="pay-amount" placeholder="0.00" min="0.01" step="0.01">
+          </div>
+          <div class="form-group">
+            <label>Reference (optional)</label>
+            <input type="text" class="form-input" id="pay-ref" placeholder="e.g. Invoice #001, Rent">
+          </div>
+          <button class="action-btn" onclick="payBeneficiary()">Pay Now</button>
+        </div>
       </div>
 
       <!-- BENEFICIARIES -->
@@ -733,6 +783,107 @@
     });
   });
 
+  // ── PAY BENEFICIARY ──
+  function refreshPayTab() {
+    const empty = document.getElementById('pay-empty');
+    const inner = document.getElementById('pay-form-inner');
+
+    if (!beneficiaries.length) {
+      empty.style.display = 'block';
+      inner.style.display = 'none';
+      return;
+    }
+    empty.style.display = 'none';
+    inner.style.display = 'block';
+
+    // Refresh beneficiary dropdown
+    const benSel = document.getElementById('pay-ben-select');
+    benSel.innerHTML = '<option value="">— Choose a beneficiary —</option>';
+    beneficiaries.forEach(b => {
+      const opt = document.createElement('option');
+      opt.value = b.id;
+      opt.textContent = b.name + ' · ' + b.bank;
+      benSel.appendChild(opt);
+    });
+
+    // Refresh accounts dropdown
+    const acctSel = document.getElementById('pay-from-account');
+    const current = acctSel.value;
+    acctSel.innerHTML = '<option value="">Select source account</option>';
+    const all = [
+      { label: 'Checking — ' + ACCOUNT_NO, value: 'primary', bal: balance },
+      { label: 'Savings — SAV-7829', value: 'SAV-7829', bal: 4250.00 },
+      { label: 'Investment — INV-3341', value: 'INV-3341', bal: 12800.00 },
+      ...extraAccounts.map(a => ({ label: (a.label) + ' — ' + a.sub, value: a.sub, bal: a.balance }))
+    ];
+    all.forEach(a => {
+      const opt = document.createElement('option');
+      opt.value = a.value;
+      opt.textContent = a.label + '  ($' + a.bal.toLocaleString('en-US',{minimumFractionDigits:2,maximumFractionDigits:2}) + ')';
+      acctSel.appendChild(opt);
+    });
+    if (current) acctSel.value = current;
+  }
+
+  function onPayBenSelect() {
+    const id = parseInt(document.getElementById('pay-ben-select').value);
+    const card = document.getElementById('pay-ben-card');
+    if (!id) { card.style.display = 'none'; return; }
+    const b = beneficiaries.find(b => b.id === id);
+    if (!b) return;
+    card.style.display = 'block';
+    document.getElementById('pay-ben-avatar').textContent = b.name.charAt(0).toUpperCase();
+    document.getElementById('pay-ben-name').textContent = b.name;
+    document.getElementById('pay-ben-detail').textContent = b.acct + ' · ' + b.bank + (b.rel ? ' · ' + b.rel : '');
+  }
+
+  function payBeneficiary() {
+    const fromVal = document.getElementById('pay-from-account').value;
+    const benId = parseInt(document.getElementById('pay-ben-select').value);
+    const val = parseFloat(document.getElementById('pay-amount').value);
+    const ref = document.getElementById('pay-ref').value.trim();
+
+    if (!fromVal) return showToast(false, 'No Source Account', 'Please select which account to pay from.');
+    if (!benId) return showToast(false, 'No Beneficiary', 'Please select a beneficiary to pay.');
+    if (isNaN(val) || val <= 0) return showToast(false, 'Invalid Amount', 'Please enter a valid amount.');
+
+    const b = beneficiaries.find(b => b.id === benId);
+    if (!b) return;
+
+    // Get source account balance
+    let srcBal = fromVal === 'primary' ? balance : 0;
+    if (fromVal !== 'primary') {
+      const ea = extraAccounts.find(a => a.sub === fromVal);
+      if (ea) srcBal = ea.balance;
+      else srcBal = fromVal === 'SAV-7829' ? 4250 : fromVal === 'INV-3341' ? 12800 : 0;
+    }
+    if (val > srcBal) return showToast(false, 'Insufficient Funds', 'Not enough funds in selected account.');
+
+    const fromLabel = document.getElementById('pay-from-account').options[document.getElementById('pay-from-account').selectedIndex].text.split('  ')[0];
+
+    showModal('💸', 'Confirm Payment', 'Paying ' + b.name + ' from ' + fromLabel + ':', '$' + val.toLocaleString('en-US',{minimumFractionDigits:2}), b.acct + ' · ' + b.bank + (ref ? ' · ' + ref : ''), () => {
+      // Deduct from correct account
+      if (fromVal === 'primary') {
+        const old = balance;
+        balance -= val;
+        animateBalance(balance, old);
+      } else {
+        const ea = extraAccounts.find(a => a.sub === fromVal);
+        if (ea) ea.balance -= val;
+      }
+      addTransaction('transfer', val, 'Payment to ' + b.name + (ref ? ' · ' + ref : ''));
+      renderAccounts();
+      refreshPayTab();
+      document.getElementById('pay-amount').value = '';
+      document.getElementById('pay-ref').value = '';
+      document.getElementById('pay-ben-select').value = '';
+      document.getElementById('pay-ben-card').style.display = 'none';
+      document.getElementById('pay-from-account').value = '';
+      showToast(true, 'Payment Sent', '$' + val.toLocaleString('en-US',{minimumFractionDigits:2}) + ' paid to ' + b.name + '.');
+      saveData();
+    });
+  }
+
   // ── BENEFICIARY DROPDOWN ──
   function refreshBenDropdown() {
     const sel = document.getElementById('priv-ben-select');
@@ -783,6 +934,7 @@
     beneficiaries.unshift({ id: Date.now(), name, acct, bank, rel });
     renderBeneficiaries();
     refreshBenDropdown();
+    refreshPayTab();
     toggleBenForm();
     showToast(true, 'Beneficiary Saved', name + ' has been added.');
     saveData();
@@ -792,6 +944,7 @@
     beneficiaries = beneficiaries.filter(b => b.id !== id);
     renderBeneficiaries();
     refreshBenDropdown();
+    refreshPayTab();
     showToast(true, 'Removed', 'Beneficiary has been deleted.');
     saveData();
   }
@@ -838,6 +991,7 @@
     const newNo = prefixes[type] + '-' + Math.floor(1000 + Math.random() * 9000);
     extraAccounts.push({ id: Date.now(), label: nick || type, sub: newNo, balance: bal, primary: false });
     renderAccounts();
+    refreshPayTab();
     toggleAddAccountForm();
     showToast(true, 'Account Opened', (nick || type) + ' account ' + newNo + ' is now active.');
     saveData();
@@ -918,6 +1072,7 @@
   renderAccounts();
   renderBeneficiaries();
   refreshBenDropdown();
+  refreshPayTab();
 
   // Interest accrual
   setInterval(() => {
