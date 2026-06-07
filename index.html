@@ -714,17 +714,18 @@
     const count = document.getElementById('tx-count');
     count.textContent = transactions.length + ' transaction' + (transactions.length !== 1 ? 's' : '');
     if (!transactions.length) { list.innerHTML = '<div class="no-tx">No transactions yet.</div>'; return; }
-    const icons = { deposit:'↓', transfer:'⇄' };
-    const signs = { deposit:'+', transfer:'→' };
-    list.innerHTML = transactions.slice(0, 20).map(tx => `
+    const icons = { deposit:'↓', transfer:'⇄', purchase:'🛒', payment:'💸' };
+    const signs = { deposit:'+', transfer:'→', purchase:'−', payment:'−' };
+    const colors = { deposit:'deposit', transfer:'transfer', purchase:'withdraw', payment:'withdraw' };
+    list.innerHTML = transactions.map(tx => `
       <div class="tx-item">
-        <div class="tx-icon ${tx.type}">${icons[tx.type] || '⇄'}</div>
+        <div class="tx-icon ${colors[tx.type] || 'transfer'}">${icons[tx.type] || '⇄'}</div>
         <div class="tx-info">
-          <div class="tx-title">${tx.type === 'deposit' ? 'Deposit' : 'Transfer'}${tx.note ? ' · ' + tx.note : ''}</div>
-          <div class="tx-sub">${ACCOUNT_NO} · ${tx.date}</div>
+          <div class="tx-title">${tx.note || tx.type}</div>
+          <div class="tx-sub">${tx.country ? tx.country + '  ·  ' : ''}${tx.ref ? tx.ref + '  ·  ' : ''}${tx.date}</div>
         </div>
         <div>
-          <div class="tx-amount ${tx.type}">${signs[tx.type] || '→'}$${parseFloat(tx.amount).toLocaleString('en-US',{minimumFractionDigits:2,maximumFractionDigits:2})}</div>
+          <div class="tx-amount ${colors[tx.type] || 'transfer'}">${signs[tx.type] || '→'}$${parseFloat(tx.amount).toLocaleString('en-US',{minimumFractionDigits:2,maximumFractionDigits:2})}</div>
           <div class="tx-time">${tx.time}</div>
         </div>
       </div>`).join('');
@@ -1118,9 +1119,80 @@
   openDB().catch(() => {}).finally(async () => {
     await loadData();
 
-    // Seed default deposit only on first ever load
+    // Seed default transaction history only on first ever load
     if (transactions.length === 0) {
-      transactions.unshift({ type:'deposit', amount:5000000, note:'Wire Transfer', time:'09:14 AM', date:'Jun 4' });
+      const history = [
+        // 2026
+        { type:'transfer', amount:5000000,  note:'Wire Transfer — World Aurelian Capital',     country:'🇺🇸 USA',          ref:'REF-WA2026-001', time:'09:14 AM', date:'Jun 4, 2026' },
+        { type:'payment',  amount:128500,   note:'International Trade Settlement',              country:'🇨🇳 China',         ref:'INV-CN-0441',    time:'11:30 AM', date:'May 28, 2026' },
+        { type:'transfer', amount:95000,    note:'SWIFT Transfer — Shenzhen Operations',       country:'🇨🇳 China',         ref:'SWT-2026-0228',  time:'02:15 PM', date:'May 14, 2026' },
+        { type:'purchase', amount:47200,    note:'Procurement — Industrial Equipment',         country:'🇿🇦 South Africa',  ref:'PO-ZA-1183',     time:'10:00 AM', date:'Apr 30, 2026' },
+        { type:'payment',  amount:210000,   note:'Consulting Services — Meridian Group',       country:'🇺🇸 USA',          ref:'INV-MG-0094',    time:'03:45 PM', date:'Apr 18, 2026' },
+        { type:'transfer', amount:75000,    note:'Wire Transfer — Johannesburg Office',        country:'🇿🇦 South Africa',  ref:'REF-JHB-0031',   time:'09:00 AM', date:'Mar 22, 2026' },
+        { type:'purchase', amount:33800,    note:'Technology Licensing — Beijing Tech Co.',    country:'🇨🇳 China',         ref:'LIC-BJ-0017',    time:'01:20 PM', date:'Mar 10, 2026' },
+        { type:'payment',  amount:189000,   note:'Legal & Compliance Fees',                    country:'🇺🇸 USA',          ref:'INV-LC-0055',    time:'11:00 AM', date:'Feb 27, 2026' },
+        { type:'transfer', amount:420000,   note:'SWIFT Transfer — Cape Town Development',    country:'🇿🇦 South Africa',  ref:'SWT-CPT-0019',   time:'08:30 AM', date:'Feb 12, 2026' },
+        { type:'purchase', amount:62400,    note:'Logistics & Freight — Shanghai Port',        country:'🇨🇳 China',         ref:'LOG-SH-0302',    time:'04:10 PM', date:'Jan 30, 2026' },
+        { type:'payment',  amount:97500,    note:'Strategic Advisory — World Aurelian',        country:'🇺🇸 USA',          ref:'INV-WA-0012',    time:'02:00 PM', date:'Jan 15, 2026' },
+        { type:'transfer', amount:315000,   note:'Wire Transfer — Durban Trade Hub',           country:'🇿🇦 South Africa',  ref:'REF-DBN-0044',   time:'10:45 AM', date:'Jan 3, 2026' },
+
+        // 2025
+        { type:'payment',  amount:144000,   note:'Import Duties & Customs Settlement',         country:'🇨🇳 China',         ref:'CUS-CN-0881',    time:'09:30 AM', date:'Dec 19, 2025' },
+        { type:'transfer', amount:500000,   note:'Capital Injection — SA Operations',          country:'🇿🇦 South Africa',  ref:'CAP-ZA-0007',    time:'11:15 AM', date:'Dec 5, 2025' },
+        { type:'purchase', amount:88700,    note:'Software Development — Silicon Valley',      country:'🇺🇸 USA',          ref:'DEV-SV-0233',    time:'03:00 PM', date:'Nov 20, 2025' },
+        { type:'payment',  amount:231000,   note:'Manufacturing Contract — Guangzhou',         country:'🇨🇳 China',         ref:'MFG-GZ-0115',    time:'01:45 PM', date:'Nov 7, 2025' },
+        { type:'transfer', amount:175000,   note:'SWIFT Transfer — Pretoria HQ',               country:'🇿🇦 South Africa',  ref:'SWT-PTA-0028',   time:'08:00 AM', date:'Oct 24, 2025' },
+        { type:'purchase', amount:54300,    note:'Market Research & Analytics',                country:'🇺🇸 USA',          ref:'MKT-US-0077',    time:'02:30 PM', date:'Oct 10, 2025' },
+        { type:'payment',  amount:390000,   note:'Distribution Network — Chengdu',             country:'🇨🇳 China',         ref:'DST-CD-0049',    time:'10:20 AM', date:'Sep 25, 2025' },
+        { type:'transfer', amount:260000,   note:'Wire Transfer — Sandton Financial District', country:'🇿🇦 South Africa',  ref:'REF-SND-0062',   time:'09:45 AM', date:'Sep 11, 2025' },
+        { type:'purchase', amount:41900,    note:'Office Infrastructure — New York',           country:'🇺🇸 USA',          ref:'OFC-NY-0198',    time:'04:00 PM', date:'Aug 28, 2025' },
+        { type:'payment',  amount:167000,   note:'Raw Materials — Wuhan Supplier',             country:'🇨🇳 China',         ref:'MAT-WH-0334',    time:'11:30 AM', date:'Aug 14, 2025' },
+        { type:'transfer', amount:480000,   note:'Project Funding — Cape Winelands Development',country:'🇿🇦 South Africa', ref:'PRJ-CW-0011',    time:'08:15 AM', date:'Jul 30, 2025' },
+        { type:'payment',  amount:112000,   note:'Intellectual Property Licensing',            country:'🇺🇸 USA',          ref:'IP-US-0041',     time:'01:00 PM', date:'Jul 16, 2025' },
+        { type:'purchase', amount:77600,    note:'Electronic Components — Shenzhen',           country:'🇨🇳 China',         ref:'ELC-SZ-0227',    time:'03:30 PM', date:'Jul 2, 2025' },
+        { type:'transfer', amount:340000,   note:'SWIFT Transfer — Johannesburg Expansion',   country:'🇿🇦 South Africa',  ref:'SWT-JHB-0033',   time:'10:00 AM', date:'Jun 18, 2025' },
+        { type:'payment',  amount:203000,   note:'Financial Consulting — Washington DC',       country:'🇺🇸 USA',          ref:'FIN-DC-0088',    time:'02:45 PM', date:'Jun 4, 2025' },
+        { type:'purchase', amount:59100,    note:'Textile & Apparel Supply Chain',             country:'🇨🇳 China',         ref:'TEX-CN-0156',    time:'09:00 AM', date:'May 21, 2025' },
+        { type:'transfer', amount:125000,   note:'Wire Transfer — East London Operations',    country:'🇿🇦 South Africa',  ref:'REF-EL-0019',    time:'11:45 AM', date:'May 7, 2025' },
+        { type:'payment',  amount:445000,   note:'Infrastructure Investment — Dallas',         country:'🇺🇸 USA',          ref:'INF-TX-0006',    time:'03:15 PM', date:'Apr 23, 2025' },
+        { type:'purchase', amount:93200,    note:'Pharmaceutical Supply — Beijing',            country:'🇨🇳 China',         ref:'PHA-BJ-0071',    time:'10:30 AM', date:'Apr 9, 2025' },
+        { type:'transfer', amount:285000,   note:'SWIFT Transfer — Durban Port Logistics',    country:'🇿🇦 South Africa',  ref:'SWT-DBN-0041',   time:'08:45 AM', date:'Mar 26, 2025' },
+        { type:'payment',  amount:138500,   note:'Media & Communications — Los Angeles',       country:'🇺🇸 USA',          ref:'MED-LA-0029',    time:'01:30 PM', date:'Mar 12, 2025' },
+        { type:'purchase', amount:66800,    note:'Automotive Parts — Changsha Factory',        country:'🇨🇳 China',         ref:'AUT-CS-0088',    time:'04:00 PM', date:'Feb 26, 2025' },
+        { type:'transfer', amount:195000,   note:'Wire Transfer — Bloemfontein Office',        country:'🇿🇦 South Africa',  ref:'REF-BFN-0027',   time:'09:20 AM', date:'Feb 12, 2025' },
+        { type:'payment',  amount:320000,   note:'Energy Sector Investment — Houston',         country:'🇺🇸 USA',          ref:'ENR-TX-0014',    time:'02:00 PM', date:'Jan 29, 2025' },
+        { type:'purchase', amount:84500,    note:'Construction Materials — Tianjin',           country:'🇨🇳 China',         ref:'CON-TJ-0199',    time:'11:00 AM', date:'Jan 15, 2025' },
+        { type:'transfer', amount:550000,   note:'SWIFT Transfer — Johannesburg HQ',          country:'🇿🇦 South Africa',  ref:'SWT-JHB-0018',   time:'08:30 AM', date:'Jan 2, 2025' },
+
+        // 2024
+        { type:'payment',  amount:178000,   note:'Legal Services — New York Law Firm',         country:'🇺🇸 USA',          ref:'LEG-NY-0061',    time:'03:45 PM', date:'Dec 18, 2024' },
+        { type:'purchase', amount:112300,   note:'Chemical Supply — Nanjing',                  country:'🇨🇳 China',         ref:'CHM-NJ-0044',    time:'10:15 AM', date:'Dec 4, 2024' },
+        { type:'transfer', amount:430000,   note:'Capital Transfer — Cape Town HQ',            country:'🇿🇦 South Africa',  ref:'CAP-CPT-0009',   time:'09:00 AM', date:'Nov 20, 2024' },
+        { type:'payment',  amount:265000,   note:'Technology Partnership — San Francisco',     country:'🇺🇸 USA',          ref:'TECH-SF-0037',   time:'01:00 PM', date:'Nov 6, 2024' },
+        { type:'purchase', amount:71400,    note:'Packaging & Manufacturing — Dongguan',       country:'🇨🇳 China',         ref:'PKG-DG-0122',    time:'02:30 PM', date:'Oct 23, 2024' },
+        { type:'transfer', amount:310000,   note:'SWIFT Transfer — Port Elizabeth',            country:'🇿🇦 South Africa',  ref:'SWT-PE-0031',    time:'11:00 AM', date:'Oct 9, 2024' },
+        { type:'payment',  amount:195500,   note:'Audit & Accounting Services',                country:'🇺🇸 USA',          ref:'AUD-US-0018',    time:'04:15 PM', date:'Sep 25, 2024' },
+        { type:'purchase', amount:88000,    note:'Steel & Metals — Wuhan Steel Works',         country:'🇨🇳 China',         ref:'STL-WH-0267',    time:'09:30 AM', date:'Sep 11, 2024' },
+        { type:'transfer', amount:240000,   note:'Wire Transfer — Sandton HQ',                 country:'🇿🇦 South Africa',  ref:'REF-SND-0044',   time:'10:00 AM', date:'Aug 28, 2024' },
+        { type:'payment',  amount:147000,   note:'Marketing & Brand Strategy',                 country:'🇺🇸 USA',          ref:'MKT-US-0055',    time:'02:00 PM', date:'Aug 14, 2024' },
+        { type:'purchase', amount:96700,    note:'Rare Earth Materials — Inner Mongolia',      country:'🇨🇳 China',         ref:'REM-IM-0038',    time:'11:45 AM', date:'Jul 31, 2024' },
+        { type:'transfer', amount:375000,   note:'SWIFT Transfer — Pretoria Operations',       country:'🇿🇦 South Africa',  ref:'SWT-PTA-0014',   time:'08:00 AM', date:'Jul 17, 2024' },
+        { type:'payment',  amount:228000,   note:'Supply Chain Management — Chicago',          country:'🇺🇸 USA',          ref:'SCM-CH-0029',    time:'03:30 PM', date:'Jul 3, 2024' },
+        { type:'purchase', amount:54900,    note:'Consumer Goods — Hangzhou Supplier',         country:'🇨🇳 China',         ref:'CGD-HZ-0091',    time:'01:15 PM', date:'Jun 19, 2024' },
+        { type:'transfer', amount:185000,   note:'Wire Transfer — Durban Harbour Development', country:'🇿🇦 South Africa',  ref:'REF-DBN-0033',   time:'09:45 AM', date:'Jun 5, 2024' },
+        { type:'payment',  amount:312000,   note:'Real Estate Investment — Miami',             country:'🇺🇸 USA',          ref:'REI-MIA-0008',   time:'02:15 PM', date:'May 22, 2024' },
+        { type:'purchase', amount:78300,    note:'Telecoms Equipment — Huawei Supplier',       country:'🇨🇳 China',         ref:'TEL-HW-0177',    time:'10:30 AM', date:'May 8, 2024' },
+        { type:'transfer', amount:460000,   note:'SWIFT Transfer — Cape Town Expansion',       country:'🇿🇦 South Africa',  ref:'SWT-CPT-0006',   time:'08:15 AM', date:'Apr 24, 2024' },
+        { type:'payment',  amount:173000,   note:'Pharmaceutical Distribution — Boston',       country:'🇺🇸 USA',          ref:'PHA-BOS-0022',   time:'01:45 PM', date:'Apr 10, 2024' },
+        { type:'purchase', amount:105600,   note:'Heavy Machinery — Chongqing',                country:'🇨🇳 China',         ref:'MCH-CQ-0055',    time:'03:00 PM', date:'Mar 27, 2024' },
+        { type:'transfer', amount:290000,   note:'Wire Transfer — Johannesburg Trade',         country:'🇿🇦 South Africa',  ref:'REF-JHB-0021',   time:'10:15 AM', date:'Mar 13, 2024' },
+        { type:'payment',  amount:241000,   note:'Insurance & Risk Management',                country:'🇺🇸 USA',          ref:'INS-US-0034',    time:'02:45 PM', date:'Feb 28, 2024' },
+        { type:'purchase', amount:67200,    note:'Food & Agriculture — Shandong',              country:'🇨🇳 China',         ref:'AGR-SD-0143',    time:'09:00 AM', date:'Feb 14, 2024' },
+        { type:'transfer', amount:520000,   note:'SWIFT Transfer — World Aurelian SA Fund',   country:'🇿🇦 South Africa',  ref:'SWT-WA-0003',    time:'08:30 AM', date:'Jan 31, 2024' },
+        { type:'payment',  amount:158000,   note:'Digital Infrastructure — Seattle',           country:'🇺🇸 USA',          ref:'DIG-SEA-0016',   time:'01:00 PM', date:'Jan 17, 2024' },
+        { type:'purchase', amount:89400,    note:'Solar Panel Components — Yingli',            country:'🇨🇳 China',         ref:'SOL-YL-0029',    time:'11:30 AM', date:'Jan 3, 2024' },
+      ];
+      transactions = history;
       saveData();
     }
 
