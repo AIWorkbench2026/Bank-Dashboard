@@ -300,7 +300,6 @@
       <button class="num-btn clear" data-n="del">⌫</button>
     </div>
     <div class="pin-error" id="pin-error"></div>
-    <p class="pin-hint">PIN: <strong style="color:var(--gold)">2476</strong></p>
   </div>
 </div>
 
@@ -316,14 +315,12 @@
       <div class="brand-text">
         <h1>BANK OF AMERICA</h1>
         <p>Private Banking &amp; Wealth</p>
+        <p style="font-size:0.58rem;letter-spacing:0.2em;color:var(--white-dim);text-transform:uppercase;margin-top:2px">A Beneficiary of World Aurelian</p>
       </div>
     </div>
     <div class="header-right">
       <div class="account-chip">
-        <div style="display:flex;flex-direction:column;gap:1px">
-          <span style="color:var(--white);font-weight:500">Michael Anderson</span>
-          <span style="font-size:0.62rem;color:var(--gold);letter-spacing:0.06em">A Beneficiary of World Aurelian</span>
-        </div>
+        <span style="color:var(--white);font-weight:500">Michael Anderson</span>
         &nbsp;·&nbsp; Account <span id="header-acct">••••</span>
       </div>
       <button class="logout-btn" id="logout-btn">Lock Session</button>
@@ -343,7 +340,6 @@
           <div>
             <div class="meta-label">Account Holder</div>
             <div class="meta-val" style="color:var(--white)">Michael Anderson</div>
-            <div style="font-size:0.68rem;color:var(--gold);letter-spacing:0.08em;margin-top:3px">A Beneficiary of World Aurelian</div>
           </div>
           <div>
             <div class="meta-label">Last Deposit</div>
@@ -1036,56 +1032,111 @@
     if (el) el.scrollIntoView({ behavior:'smooth', block:'start' });
   }
 
-  // ── STORAGE ──
-  function saveData() {
+  // ── PERSISTENT STORAGE (IndexedDB + localStorage fallback) ──
+  const DB_NAME = 'bofaDB';
+  const DB_STORE = 'appData';
+  const DB_VERSION = 1;
+  let db = null;
+
+  function openDB() {
+    return new Promise((resolve, reject) => {
+      const req = indexedDB.open(DB_NAME, DB_VERSION);
+      req.onupgradeneeded = e => {
+        e.target.result.createObjectStore(DB_STORE, { keyPath: 'key' });
+      };
+      req.onsuccess = e => { db = e.target.result; resolve(db); };
+      req.onerror = () => reject();
+    });
+  }
+
+  function dbSet(key, value) {
+    // Always save to localStorage as fallback
+    try { localStorage.setItem('bofa_' + key, JSON.stringify(value)); } catch(e) {}
+    // Save to IndexedDB
+    if (!db) return;
     try {
-      localStorage.setItem('bofa_balance', JSON.stringify(balance));
-      localStorage.setItem('bofa_transactions', JSON.stringify(transactions));
-      localStorage.setItem('bofa_beneficiaries', JSON.stringify(beneficiaries));
-      localStorage.setItem('bofa_extraAccounts', JSON.stringify(extraAccounts));
-      localStorage.setItem('bofa_lastDep', document.getElementById('last-dep-display').textContent);
+      const tx = db.transaction(DB_STORE, 'readwrite');
+      tx.objectStore(DB_STORE).put({ key, value });
     } catch(e) {}
   }
 
-  function loadData() {
-    try {
-      const savedBal = localStorage.getItem('bofa_balance');
-      if (savedBal !== null) balance = JSON.parse(savedBal);
+  function dbGet(key) {
+    return new Promise(resolve => {
+      // Try IndexedDB first
+      if (db) {
+        try {
+          const tx = db.transaction(DB_STORE, 'readonly');
+          const req = tx.objectStore(DB_STORE).get(key);
+          req.onsuccess = e => {
+            if (e.target.result) { resolve(e.target.result.value); return; }
+            // Fall back to localStorage
+            try {
+              const ls = localStorage.getItem('bofa_' + key);
+              resolve(ls ? JSON.parse(ls) : null);
+            } catch(e) { resolve(null); }
+          };
+          req.onerror = () => {
+            try {
+              const ls = localStorage.getItem('bofa_' + key);
+              resolve(ls ? JSON.parse(ls) : null);
+            } catch(e) { resolve(null); }
+          };
+          return;
+        } catch(e) {}
+      }
+      // localStorage only fallback
+      try {
+        const ls = localStorage.getItem('bofa_' + key);
+        resolve(ls ? JSON.parse(ls) : null);
+      } catch(e) { resolve(null); }
+    });
+  }
 
-      const savedTx = localStorage.getItem('bofa_transactions');
-      if (savedTx) transactions = JSON.parse(savedTx);
+  function saveData() {
+    dbSet('balance', balance);
+    dbSet('transactions', transactions);
+    dbSet('beneficiaries', beneficiaries);
+    dbSet('extraAccounts', extraAccounts);
+    dbSet('lastDep', document.getElementById('last-dep-display').textContent);
+  }
 
-      const savedBen = localStorage.getItem('bofa_beneficiaries');
-      if (savedBen) beneficiaries = JSON.parse(savedBen);
+  async function loadData() {
+    const savedBal   = await dbGet('balance');
+    const savedTx    = await dbGet('transactions');
+    const savedBen   = await dbGet('beneficiaries');
+    const savedAccts = await dbGet('extraAccounts');
+    const savedDep   = await dbGet('lastDep');
 
-      const savedAccts = localStorage.getItem('bofa_extraAccounts');
-      if (savedAccts) extraAccounts = JSON.parse(savedAccts);
-
-      const savedDep = localStorage.getItem('bofa_lastDep');
-      if (savedDep) document.getElementById('last-dep-display').textContent = savedDep;
-    } catch(e) {}
+    if (savedBal !== null) balance = savedBal;
+    if (savedTx)    transactions  = savedTx;
+    if (savedBen)   beneficiaries = savedBen;
+    if (savedAccts) extraAccounts = savedAccts;
+    if (savedDep)   document.getElementById('last-dep-display').textContent = savedDep;
   }
 
   // ── INIT ──
-  loadData();
+  openDB().catch(() => {}).finally(async () => {
+    await loadData();
 
-  // If no saved transactions, seed the default deposit
-  if (transactions.length === 0) {
-    transactions.unshift({ type:'deposit', amount:5000000, note:'Wire Transfer', time:'09:14 AM', date:'Jun 4' });
-  }
+    // Seed default deposit only on first ever load
+    if (transactions.length === 0) {
+      transactions.unshift({ type:'deposit', amount:5000000, note:'Wire Transfer', time:'09:14 AM', date:'Jun 4' });
+      saveData();
+    }
 
-  // Sync balance display
-  const [initInt, initDec] = balance.toFixed(2).split('.');
-  document.getElementById('balance-int').textContent = parseInt(initInt).toLocaleString();
-  document.getElementById('balance-dec').textContent = '.' + initDec;
+    // Sync balance display
+    const [initInt, initDec] = balance.toFixed(2).split('.');
+    document.getElementById('balance-int').textContent = parseInt(initInt).toLocaleString();
+    document.getElementById('balance-dec').textContent = '.' + initDec;
 
-  document.getElementById('header-acct').textContent = '••••' + ACCT_SUFFIX;
-  document.getElementById('acct-no').textContent = ACCOUNT_NO;
-  renderHistory();
-  renderAccounts();
-  renderBeneficiaries();
-  refreshBenDropdown();
-  refreshPayTab();
+    document.getElementById('header-acct').textContent = '••••' + ACCT_SUFFIX;
+    document.getElementById('acct-no').textContent = ACCOUNT_NO;
+    renderHistory();
+    renderAccounts();
+    renderBeneficiaries();
+    refreshBenDropdown();
+    refreshPayTab();
+  });
 
   // Interest accrual
   setInterval(() => {
